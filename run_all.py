@@ -62,17 +62,13 @@ def create_resume_for_job_application(
     logging.info("Resume creation process completed.")
 
 
-if __name__ == "__main__":
-    create_resume_for_job_application(force_run_all=True,
-                                      resume_file_path="temp/resume.docx",
-                                      accomplishments_file_path="temp/short_accomplishments.txt",
-                                      job_description_link="https://www.nimbleway.com/job/nlp-engineer-628de?transaction_id=102930a437339b8514403b73014016&coref=1.10.s8C_64E&submissionGuid=8e59a49b-b30a-46b4-8ff1-0ca026118b65&aff_id=29&offer_id=8&344e6a5d_page=2",
-                                      company_base_link="https://www.nimbleway.com/",
-                                      company_name=None
-                                      )
+# if __name__ == "__main__":
+#     create_resume_for_job_application(force_run_all=True,
+#                                       resume_file_path="temp/resume.docx",
+#                                       accomplishments_file_path="temp/short_accomplishments.txt",
+#                                       job_description_link="https://www.nimbleway.com/job/nlp-engineer-628de?transaction_id=102930a437339b8514403b73014016&coref=1.10.s8C_64E&submissionGuid=8e59a49b-b30a-46b4-8ff1-0ca026118b65&aff_id=29&offer_id=8&344e6a5d_page=2",
+#                                       company_base_link="https://www.nimbleway.com/",
+#                                       company_name=None
+#                                       )
 
-"""
-JOB_DESCRIPTION_LINK = 
-"https://www.nimbleway.com/job/nlp-engineer-628de?transaction_id=102930a437339b8514403b73014016&coref=1.10.s8C_64E&submissionGuid=8e59a49b-b30a-46b4-8ff1-0ca026118b65&aff_id=29&offer_id=8&344e6a5d_page=2"
-COMPANY_BASE_LINK = "https://www.nimbleway.com/"
-"""
+

@@ -16,14 +16,16 @@ async def generate_resume(
     company_name: str = Form(None),
     force_run_all: bool = Form(False)
 ):
-    # Save the uploaded resume file
+    os.makedirs('temp', exist_ok=True)
+    os.makedirs('result', exist_ok=True)
+
     resume_file_path = f"temp/{resume_file.filename}"
     with open(resume_file_path, "wb") as buffer:
         shutil.copyfileobj(resume_file.file, buffer)
         # Save the uploaded resume file
     accomplishments_file_path = f"temp/{accomplishments_file.filename}"
     with open(accomplishments_file_path, "wb") as buffer:
-        shutil.copyfileobj(resume_file.file, buffer)
+        shutil.copyfileobj(accomplishments_file.file, buffer)
 
     # Call your main function with the provided inputs
     create_resume_for_job_application(
