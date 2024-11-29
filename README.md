@@ -1,146 +1,151 @@
-# Resume Creator
+# Resume Creator API
 
-This project is a Python-based tool designed to automate the creation of a tailored resume for a specific job application. It leverages OpenAI's GPT models to generate customized resume content by analyzing your existing resume, the job description, company information, and your professional accomplishments.
+Resume Creator API is a Python-based tool designed to automate the creation of a tailored resume for specific job applications. It leverages OpenAI's GPT models to generate customized resume content by analyzing your existing resume, additional accomplishments, the job description, and company information.
+
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Setup and Installation](#setup-and-installation)
+- [Running the API](#running-the-api)
+- [Using the API](#using-the-api)
+  - [Endpoint](#endpoint)
+  - [Request Parameters](#request-parameters)
+- [Cleaning Temporary Files](#cleaning-temporary-files)
+- [Notes](#notes)
 
 ## Features
 
-- **Accomplishment Extraction**: Extracts your professional accomplishments from your existing resume.
+- **Accomplishment Extraction**: Extracts your professional accomplishments from your existing resume and an additional accomplishments file.
 - **Company Summary Generation**: Crawls the company's website to generate a comprehensive summary.
 - **Job Description Parsing**: Extracts and processes the job description from a provided URL.
 - **Industry Identification**: Determines the primary industry related to the job.
 - **Resume Generation**: Creates a customized resume in JSON format, focusing on relevant skills and experiences.
 - **Resume Assembly**: Converts the generated JSON resume into a well-formatted Word document.
+- **API Interface**: Provides a RESTful API to interact with the resume generation process.
 
 ## Prerequisites
 
-- Python 3.7 or higher
-- OpenAI API access (API key and organization ID)
-- Required Python packages:
+- **Python 3.7 or higher**
+- **OpenAI API access** (API key and organization ID)
+- **Required Python packages** (listed in `requirements.txt`):
+  - `fastapi`
+  - `uvicorn`
   - `docx2txt`
   - `beautifulsoup4`
   - `requests`
   - `tqdm`
-  - `dotenv`
+  - `python-dotenv`
   - `python-docx`
   - `tiktoken`
-  - `gitignore-parser`
 
 ## Setup and Installation
 
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/yourusername/resume_creator.git
-   cd resume_creator
-   ```
-
-2. **Create a Virtual Environment**
-
-   ```bash
-   python -m venv resume_creator_venv
-   ```
-
-3. **Activate the Virtual Environment**
-
-   - On macOS and Linux:
-
-     ```bash
-     source resume_creator_venv/bin/activate
-     ```
-
-   - On Windows:
-
-     ```bash
-     resume_creator_venv\Scripts\activate
-     ```
-
-4. **Install Dependencies**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Configure Environment Variables**
-
-   Create a `.env` file in the root directory and add your OpenAI credentials:
-
-   ```dotenv
-   OPEN_AI_ORGANIZATION_ID=your_organization_id
-   OPEN_AI_PROJECT_ID=your_project_id
-   OPEN_AI_TOKEN=your_api_key
-   ```
-
-## Configuration
-
-1. **Update Input Constants**
-
-   In the `inputs/consts.py` file, update the following constants with your own information:
-
-   ```python
-   RESUME_FILE_PATH = "temp/resume.docx"
-   JOB_DESCRIPTION_LINK = "https://www.examplecompany.com/job-description"
-   COMPANY_BASE_LINK = "https://www.examplecompany.com/"
-   COMPANY_NAME = "ExampleCompany"
-   ```
-
-2. **Place Your Resume**
-
-   Ensure your current resume is placed at the path specified in `RESUME_FILE_PATH`.
-
-## How to Run
-
-Run the main script to generate your tailored resume:
+### 1. Clone the Repository
 
 ```bash
-python run_all.py
+git clone https://github.com/yoadsimon/resume_creator.git
+cd resume_creator
 ```
 
-This script performs the following steps:
+### 2. Create a Virtual Environment
 
-1. **Extract All Accomplishments**
+```bash
+python -m venv resume_creator_venv
+```
 
-   - Parses your existing resume to extract all professional accomplishments.
+### 3. Activate the Virtual Environment
 
-2. **Create Company Summary**
+- On macOS and Linux:
 
-   - Crawls the company's website to generate a comprehensive summary using OpenAI's GPT.
+  ```bash
+  source resume_creator_venv/bin/activate
+  ```
 
-3. **Extract Job Description Text**
+- On Windows:
 
-   - Fetches and processes the job description from the provided link.
+  ```bash
+  resume_creator_venv\Scripts\activate
+  ```
 
-4. **Extract Job Industry**
+### 4. Install Dependencies
 
-   - Determines the primary industry related to the job position.
+```bash
+pip install -r requirements.txt
+```
 
-5. **Generate Resume Text**
+### 5. Configure Environment Variables
 
-   - Uses OpenAI's GPT to generate a tailored resume in JSON format, focusing on relevant experiences and skills.
+Create a `.env` file in the root directory and add your OpenAI credentials:
 
-6. **Assemble New Resume**
+```dotenv
+OPEN_AI_ORGANIZATION_ID=your_organization_id
+OPEN_AI_PROJECT_ID=your_project_id
+OPEN_AI_TOKEN=your_api_key
+```
 
-   - Converts the generated JSON resume into a formatted Word document, ready for application.
+Replace `your_organization_id`, `your_project_id`, and `your_api_key` with your actual OpenAI credentials.
 
-The final resume will be saved in the `result` directory as `resume.docx`.
+## Running the API
+
+To start the Resume Creator API server, run the following command:
+
+```bash
+uvicorn api:app --reload
+```
+
+- **`api:app`** tells Uvicorn to look for the `app` object in the `api.py` file.
+- **`--reload`** enables auto-reload, making the server restart when you make changes to the code (useful during development).
+
+The server will start and listen on `http://127.0.0.1:8000` by default.
+
+## Using the API
+
+### Endpoint
+
+**POST** `/generate_resume`
+
+This endpoint accepts your resume file, accomplishments file, and other relevant information to generate a tailored resume.
+
+### Request Parameters
+
+The API expects a multipart/form-data POST request with the following parameters:
+
+| Parameter                | Type    | Description                                                        | Required |
+|--------------------------|---------|--------------------------------------------------------------------|----------|
+| `resume_file`            | File    | Your current resume in `.docx` format                              | Yes      |
+| `accomplishments_file`   | File    | Additional accomplishments in a text file                          | Yes      |
+| `job_description_link`   | String  | URL to the job description                                         | Yes      |
+| `company_base_link`      | String  | Base URL of the company's website                                  | Yes      |
+| `company_name`           | String  | Name of the company *(if not provided, it will be extracted)*      | No       |
+| `force_run_all`          | Boolean | If `true`, the script ignores cached data (default is `false`)     | No       |
+
+
+
+### Accessing Interactive API Documentation
+
+After starting the server, you can access the interactive API documentation provided by FastAPI at:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+This interface allows you to interact with the API directly from your browser, providing a user-friendly way to test the endpoint.
+
+## Cleaning Temporary Files
+
+The API generates temporary files during processing, stored in the `temp` and `result` directories. To clean up these files after processing, you can run the provided script:
+
+```bash
+python clean_temp_files.py
+```
+
+This script removes the `temp` directory and its contents.
 
 ## Notes
 
-- **Force Run All Steps**
-
-  If you want to force the script to run all steps and ignore any cached data, modify the `force_run_all` parameter:
-
-  ```python
-  create_resume_for_job_application(force_run_all=True)
-  ```
-
-- **Customizing Personal Details**
-
-  Ensure your personal details are included in the `PERSONAL_DETAILS_TEMP_FILE_NAME` file if required.
-
-## License
-
-This project is licensed under the MIT License.
-
-# Short Summary
-
-This README provides an overview of the Resume Creator project, instructions on how to set it up, configure it with your personal and job application details, and run the script to generate a tailored resume using OpenAI's GPT models.
+- **OpenAI API Usage**: Ensure that your OpenAI API credentials are valid and that you have sufficient quota to make API calls.
+- **File Formats**: The `resume_file` should be in `.docx` format, and the `accomplishments_file` should be a plaintext file.
+- **Error Handling**: If the API returns an error, check the server logs for detailed error messages.
+- **Security Considerations**: Be cautious with the files you upload and ensure they are from trusted sources.
+- **Performance**: The resume generation process can take some time due to API calls to OpenAI. Please be patient after sending a request.
