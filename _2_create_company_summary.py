@@ -4,7 +4,7 @@ from urllib.parse import urljoin, urlparse
 import time
 from tqdm import tqdm
 
-from inputs.consts import COMPANY_BASE_LINK, COMPANY_DATA_TEXT_TEMP_FILE_NAME, COMPANY_SUMMARY_START_PROMPT, \
+from inputs.consts import COMPANY_DATA_TEXT_TEMP_FILE_NAME, COMPANY_SUMMARY_START_PROMPT, \
     COMPANY_SUMMARY_END_PROMPT, COMPANY_SUMMARY_TEMP_FILE_NAME
 from utils.general_utils import save_to_temp_file, read_temp_file
 from utils.npl_utils import Encoder
@@ -49,12 +49,12 @@ def crawl_and_extract_text(base_url, all_text, visited_urls, encoder, max_tokens
     handle_url(base_url, 0)
 
 
-def get_company_text_data():
+def get_company_text_data(company_base_link):
     company_text_data = read_temp_file(COMPANY_DATA_TEXT_TEMP_FILE_NAME)
     if company_text_data is None:
         visited_urls = set()
         all_text = []
-        crawl_and_extract_text(base_url=COMPANY_BASE_LINK,
+        crawl_and_extract_text(base_url=company_base_link,
                                all_text=all_text,
                                visited_urls=visited_urls,
                                encoder=Encoder(),
@@ -64,18 +64,24 @@ def get_company_text_data():
     return company_text_data
 
 
-def create_company_summary(force_run=False):
+def create_company_summary(force_run=False,
+                           company_base_link=None,
+                           company_name=None):
     company_summary = read_temp_file(COMPANY_SUMMARY_TEMP_FILE_NAME)
     if company_summary and not force_run:
         return company_summary
 
-    company_text_data = get_company_text_data()
+    company_text_data = get_company_text_data(company_base_link=company_base_link)
     openai_client = OpenAIClient()
-    prompt = f"{COMPANY_SUMMARY_START_PROMPT}\n\nStart of company details:\n{company_text_data}\nEnd of company details\n\n{COMPANY_SUMMARY_END_PROMPT}"
+
+    if not company_name:
+        prompt = f"Extract and return ONLY the company name mentioned in the following text:\n{company_text_data}"
+        company_name = openai_client.generate_text(prompt).strip()
+
+    prompt = f"{COMPANY_SUMMARY_START_PROMPT.format(COMPANY_NAME=company_name)}\n\nStart of company details:\n{company_text_data}\nEnd of company details\n\n{COMPANY_SUMMARY_END_PROMPT}"
     company_summary = openai_client.generate_text(prompt)
     save_to_temp_file(company_summary, COMPANY_SUMMARY_TEMP_FILE_NAME)
     return company_summary
 
-#
 # if __name__ == "__main__":
-#     create_company_summary()
+#     create_company_summary(force_run=True)

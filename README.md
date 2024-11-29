@@ -77,7 +77,7 @@ This project is a Python-based tool designed to automate the creation of a tailo
    In the `inputs/consts.py` file, update the following constants with your own information:
 
    ```python
-   RESUME_FILE_PATH = "inputs/resume.docx"
+   RESUME_FILE_PATH = "temp/resume.docx"
    JOB_DESCRIPTION_LINK = "https://www.examplecompany.com/job-description"
    COMPANY_BASE_LINK = "https://www.examplecompany.com/"
    COMPANY_NAME = "ExampleCompany"

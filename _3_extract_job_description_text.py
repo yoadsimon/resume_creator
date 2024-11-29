@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-from inputs.consts import JOB_DESCRIPTION_LINK, JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME
+from inputs.consts import JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME
 from utils.general_utils import read_temp_file, save_to_temp_file
 
 
@@ -39,12 +39,12 @@ def extract_text_from_link(url):
     return job_description_text
 
 
-def extract_job_description_text(force_run=False):
+def extract_job_description_text(force_run=False, job_description_link=None):
     job_description_text = read_temp_file(JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
     if job_description_text and not force_run:
         return job_description_text
 
-    job_description_text = extract_text_from_link(JOB_DESCRIPTION_LINK)
+    job_description_text = extract_text_from_link(job_description_link)
     return job_description_text
 
 # if __name__ == "__main__":
