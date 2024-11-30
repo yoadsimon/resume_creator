@@ -12,3 +12,6 @@ class Encoder:
 
     def get_text_from_tokens(self, tokens):
         return self.encoder.decode(tokens)
+
+    def truncate_text(self, company_text_data, param):
+        return self.get_text_from_tokens(self.get_tokens(company_text_data)[:param])

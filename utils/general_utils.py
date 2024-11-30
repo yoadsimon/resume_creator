@@ -8,6 +8,8 @@ def save_to_temp_file(text, name):
 
 
 def read_temp_file(file_name):
+    if not file_name:
+        return None
     if 'temp' not in file_name:
         file_path = f"temp/{file_name}.txt"
     else:

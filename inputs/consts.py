@@ -57,6 +57,7 @@ presented in the same format.
 Do not include any additional explanations or text. Provide only the updated accomplishments.
 """
 
+# todo - improve this prompt
 SECONDARY_ACCOMPLISHMENTS_BULLETS_POINTS_PROMPT = """
 You are a professional resume assistant.
 

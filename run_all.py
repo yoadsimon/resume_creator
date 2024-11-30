@@ -54,7 +54,6 @@ def create_resume_for_job_application(
                                        job_description=job_description_text,
                                        job_industry=job_industry)
 
-    # TODO ADD personal_info
     logging.info("Assembling new resume.")
     assemble_new_resume(generated_resume_text=resume_text,
                         personal_info=personal_details)

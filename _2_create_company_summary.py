@@ -51,16 +51,21 @@ def crawl_and_extract_text(base_url, all_text, visited_urls, encoder, max_tokens
 
 def get_company_text_data(company_base_link):
     company_text_data = read_temp_file(COMPANY_DATA_TEXT_TEMP_FILE_NAME)
+    encoder = Encoder()
+    max_tokens = 100000
     if company_text_data is None:
         visited_urls = set()
         all_text = []
         crawl_and_extract_text(base_url=company_base_link,
                                all_text=all_text,
                                visited_urls=visited_urls,
-                               encoder=Encoder(),
+                               encoder=encoder,
+                               max_tokens=max_tokens,
                                max_depth=1)
         company_text_data = ' '.join(all_text)
-        save_to_temp_file(company_text_data, COMPANY_DATA_TEXT_TEMP_FILE_NAME)
+    if encoder.get_num_tokens(company_text_data) > max_tokens:
+        company_text_data = encoder.truncate_text(company_text_data, max_tokens)
+    save_to_temp_file(company_text_data, COMPANY_DATA_TEXT_TEMP_FILE_NAME)
     return company_text_data
 
 

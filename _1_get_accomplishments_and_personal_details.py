@@ -27,6 +27,7 @@ def generate_combined_accomplishments(resume_text, existing_accomplishments):
             resume_text=resume_text
         )
     else:
+        # todo - improve this prompt
         prompt = SECONDARY_ACCOMPLISHMENTS_BULLETS_POINTS_PROMPT.format(
             resume_text=resume_text
         )
