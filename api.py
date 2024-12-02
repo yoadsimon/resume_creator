@@ -19,7 +19,8 @@ async def generate_resume(
         job_description_link: str = Form(...),
         company_base_link: str = Form(...),
         company_name: str = Form(None),
-        force_run_all: bool = Form(False)
+        force_run_all: bool = Form(False),
+        use_o1_model: bool = Form(False)
 ):
     if force_run_all and os.path.exists('temp'):
         shutil.rmtree('temp')
@@ -42,7 +43,8 @@ async def generate_resume(
         job_description_link=job_description_link,
         company_base_link=company_base_link,
         company_name=company_name,
-        force_run_all=force_run_all
+        force_run_all=force_run_all,
+        use_o1_model=use_o1_model
     )
 
     result_file = 'result/resume.docx'

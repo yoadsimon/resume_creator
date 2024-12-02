@@ -13,14 +13,14 @@ class OpenAIClient():
             api_key=os.getenv('OPEN_AI_TOKEN')
         )
 
-    def generate_text(self, prompt):
+    def generate_text(self, prompt, model="gpt-4o-mini"):
         try:
             response = self.client.chat.completions.create(
                 messages=[{
                     "role": "user",
                     "content": prompt,
                 }],
-                model="gpt-4o-mini",
+                model=model,
             )
 
             result = response.choices[0].message.content

@@ -8,7 +8,7 @@ import re
 from utils.resume_details import ResumeDetails
 
 
-def read_generated_resume_text_to_dict(generated_resume_text=None, max_retries=3):
+def read_generated_resume_text_to_dict(generated_resume_text=None, max_retries=3, use_o1_model=False):
     if generated_resume_text is None:
         generated_resume_text = read_temp_file(GENERATED_RESUME_TEXT)
 
@@ -22,7 +22,7 @@ def read_generated_resume_text_to_dict(generated_resume_text=None, max_retries=3
         return resume_dict
 
     if max_retries > 0:
-        return read_generated_resume_text_to_dict(generate_resume_text(), max_retries - 1)
+        return read_generated_resume_text_to_dict(generate_resume_text(use_o1_model=use_o1_model), max_retries - 1)
 
     raise ValueError("No JSON content found in the generated resume text.")
 
@@ -41,19 +41,19 @@ def read_generated_personal_info_to_dict(personal_info):
     return personal_info
 
 
-def get_resume_details(generated_resume_text=None, personal_info=None) -> ResumeDetails:
-    resume_dict = read_generated_resume_text_to_dict(generated_resume_text)
+def get_resume_details(generated_resume_text=None, personal_info=None, use_o1_model=False) -> ResumeDetails:
+    resume_dict = read_generated_resume_text_to_dict(generated_resume_text, use_o1_model=use_o1_model)
     personal_info = read_generated_personal_info_to_dict(personal_info)
     resume_details = ResumeDetails(**resume_dict, **personal_info)
     return resume_details
 
 
 def assemble_new_resume(generated_resume_text=None,
-                        personal_info=None):
-    resume_details: ResumeDetails = get_resume_details(generated_resume_text, personal_info)
+                        personal_info=None,
+                        use_o1_model=False):
+    resume_details: ResumeDetails = get_resume_details(generated_resume_text, personal_info, use_o1_model)
     write_resume_to_docx(resume_details)
     return
-
 
 # if __name__ == "__main__":
 #     assemble_new_resume()

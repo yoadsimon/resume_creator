@@ -9,8 +9,8 @@ def generate_resume_text(
         job_description=None,
         company_summary=None,
         accomplishments=None,
-        job_industry=None):
-
+        job_industry=None,
+        use_o1_model=False):
     if not accomplishments:
         accomplishments = read_temp_file(FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
     if not job_description:
@@ -102,12 +102,13 @@ def generate_resume_text(
         f"- **Emphasize Relevance**: Exclude any information that is not directly related to the job description or required qualifications.\n\n"
         f"Please generate the resume accordingly, ensuring that it is polished, professional, and positions me as a strong candidate for the role. Output the result in the specified JSON format only."
     )
-
-    generated_resume_text = openai_client.generate_text(prompt)
+    if use_o1_model:
+        generated_resume_text = openai_client.generate_text(prompt, model="o1-preview-2024-09-12")
+    else:
+        generated_resume_text = openai_client.generate_text(prompt)
     save_to_temp_file(generated_resume_text, GENERATED_RESUME_TEXT)
     # print(generated_resume_text)
     return generated_resume_text
-
 
 # if __name__ == "__main__":
 #     generate_resume_text()

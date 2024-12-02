@@ -16,7 +16,8 @@ def create_resume_for_job_application(
         job_description_link,
         company_base_link,
         company_name=None,
-        force_run_all=False
+        force_run_all=False,
+        use_o1_model=False
 ):
     logging.info("Starting resume creation process.")
 
@@ -52,14 +53,15 @@ def create_resume_for_job_application(
     resume_text = generate_resume_text(accomplishments=all_accomplishments,
                                        company_summary=company_summary,
                                        job_description=job_description_text,
-                                       job_industry=job_industry)
+                                       job_industry=job_industry,
+                                       use_o1_model=use_o1_model)
 
     logging.info("Assembling new resume.")
     assemble_new_resume(generated_resume_text=resume_text,
-                        personal_info=personal_details)
+                        personal_info=personal_details,
+                        use_o1_model=use_o1_model)
 
     logging.info("Resume creation process completed.")
-
 
 # if __name__ == "__main__":
 #     create_resume_for_job_application(force_run_all=True,
@@ -69,5 +71,3 @@ def create_resume_for_job_application(
 #                                       company_base_link="https://www.nimbleway.com/",
 #                                       company_name=None
 #                                       )
-
-
