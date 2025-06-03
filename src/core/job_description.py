@@ -87,5 +87,3 @@ def get_job_description(
         job_description_link=job_description_link
     )
 
-# if __name__ == "__main__":
-#     run()

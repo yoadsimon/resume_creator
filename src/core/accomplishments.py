@@ -103,6 +103,4 @@ def get_personal_details(force_run: bool = False, resume_file_path: Optional[str
     personal_details = result["personal_details"].strip()
     save_to_temp_file(personal_details, PERSONAL_DETAILS_TEMP_FILE_NAME)
     return personal_details
-# if __name__ == "__main__":
-#     get_all_accomplishments()
 

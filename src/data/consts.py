@@ -7,10 +7,8 @@ COMPANY_SUMMARY_TEMP_FILE_NAME = "company_summary"
 JOB_INDUSTRY_TEMP_FILE_NAME = "job_industry"
 PERSONAL_DETAILS_TEMP_FILE_NAME = "personal_details"
 COMPANY_NAME_TEMP_FILE_NAME = "company_name"
-##
 
 GENERATED_RESUME_TEXT = "generated_resume_text"
-
 ############ temp files names ############
 
 
@@ -58,7 +56,7 @@ presented in the same format.
 Do not include any additional explanations or text. Provide only the updated accomplishments.
 """
 
-# todo - improve this prompt
+
 SECONDARY_ACCOMPLISHMENTS_BULLETS_POINTS_PROMPT = """
 You are a professional resume assistant.
 

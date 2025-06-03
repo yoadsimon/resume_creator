@@ -7,8 +7,6 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import time
-import asyncio
-import aiohttp
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 import signal
 
@@ -255,6 +253,3 @@ def get_cache_info():
         "cached_companies": list(_company_cache.keys()),
         "cache_size": len(_company_cache)
     }
-# if __name__ == "__main__":
-#     create_company_summary(force_run=True)
-

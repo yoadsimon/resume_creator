@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Module for assembling the final resume."""
 
-import os
 import json
 import re
 from typing import Optional, Dict, Any
@@ -116,5 +115,3 @@ def assemble_new_resume(
     )
     write_resume_to_docx(resume_details)
 
-# if __name__ == "__main__":
-#     assemble_new_resume()

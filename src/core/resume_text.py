@@ -69,6 +69,3 @@ def generate_resume_text(job_description: Optional[str] = None, company_summary:
 
     save_to_temp_file(generated_resume_text, GENERATED_RESUME_TEXT)
     return generated_resume_text
-# if __name__ == "__main__":
-#     generate_resume_text()
-

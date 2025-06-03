@@ -14,7 +14,6 @@ import docx2txt
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-import asyncio
 import PyPDF2
 import io
 

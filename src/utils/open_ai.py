@@ -51,6 +51,3 @@ class OpenAIClient():
                 time.sleep(self.retry_delay * attempt)
 
 
-# if __name__ == "__main__":
-#     client = OpenAIClient()
-#     print(client.generate_text("What is 2 + 2?"))

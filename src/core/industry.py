@@ -48,5 +48,3 @@ def extract_job_industry(
     return job_industry
 
 #
-# if __name__ == "__main__":
-#     extract_job_industry()
