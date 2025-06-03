@@ -1,20 +1,31 @@
+#!/usr/bin/env python3
+"""Module for extracting job description text from URLs."""
+
 import requests
 from bs4 import BeautifulSoup
 import time
+from typing import Optional
 
 from inputs.consts import JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME
 from utils.general_utils import read_temp_file, save_to_temp_file
 
-
-def extract_text_from_link(url):
+def extract_text_from_link(url: str) -> Optional[str]:
+    """Extract text content from a URL with retry logic.
+    
+    Args:
+        url: URL to extract text from
+        
+    Returns:
+        Extracted text or None if extraction fails
+    """
     try:
-        for i in range(10):  # Retry up to 10 times
+        for attempt in range(10):
             response = requests.get(url)
             if response.status_code != 202:
                 response.raise_for_status()
                 break
-            print(f"Attempt {i + 1}: Still processing, waiting 5 seconds...")
-            time.sleep(5)  # Wait for 5 seconds before the next retry
+            print(f"Attempt {attempt + 1}: Still processing, waiting 5 seconds...")
+            time.sleep(5)
         else:
             print("Request is still not processed after several attempts.")
             return None
@@ -24,28 +35,38 @@ def extract_text_from_link(url):
         return None
 
     soup = BeautifulSoup(response.content, 'html.parser')
-    texts = soup.find_all(text=True)
-    output = ''
-    blacklist = [
-        '[document]', 'noscript', 'header', 'html', 'meta', 'head', 'input', 'script', 'style'
-    ]
+    blacklist = {
+        '[document]', 'noscript', 'header', 'html', 'meta',
+        'head', 'input', 'script', 'style'
+    }
+    
+    output = ' '.join(
+        text.strip()
+        for text in soup.find_all(text=True)
+        if text.parent.name not in blacklist
+    ).strip()
+    
+    save_to_temp_file(output, JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
+    return output
 
-    for text in texts:
-        if text.parent.name not in blacklist:
-            output += '{} '.format(text)
-
-    job_description_text = output.strip()
-    save_to_temp_file(job_description_text, JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
-    return job_description_text
-
-
-def extract_job_description_text(force_run=False, job_description_link=None):
+def extract_job_description_text(
+    force_run: bool = False,
+    job_description_link: Optional[str] = None
+) -> Optional[str]:
+    """Extract job description text from a URL with caching.
+    
+    Args:
+        force_run: Whether to force extraction even if cached
+        job_description_link: URL of the job description
+        
+    Returns:
+        Extracted job description text or None if extraction fails
+    """
     job_description_text = read_temp_file(JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
     if job_description_text and not force_run:
         return job_description_text
 
-    job_description_text = extract_text_from_link(job_description_link)
-    return job_description_text
+    return extract_text_from_link(job_description_link)
 
 # if __name__ == "__main__":
 #     run()

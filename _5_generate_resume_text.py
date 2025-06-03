@@ -1,114 +1,104 @@
-from inputs.consts import RESUME_TEXT_TEMP_FILE_NAME, JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME, \
-    COMPANY_SUMMARY_TEMP_FILE_NAME, FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME, JOB_INDUSTRY_TEMP_FILE_NAME, \
+#!/usr/bin/env python3
+"""Module for generating tailored resume text based on job requirements."""
+
+from typing import Optional
+
+from inputs.consts import (
+    RESUME_TEXT_TEMP_FILE_NAME,
+    JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME,
+    COMPANY_SUMMARY_TEMP_FILE_NAME,
+    FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME,
+    JOB_INDUSTRY_TEMP_FILE_NAME,
     GENERATED_RESUME_TEXT
+)
 from utils.general_utils import read_temp_file, save_to_temp_file
 from utils.open_ai import OpenAIClient
-
+from utils.langchain_utils import LangChainClient, create_resume_generation_chain
 
 def generate_resume_text(
-        job_description=None,
-        company_summary=None,
-        accomplishments=None,
-        job_industry=None,
-        use_o1_model=False):
-    if not accomplishments:
-        accomplishments = read_temp_file(FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
-    if not job_description:
-        job_description = read_temp_file(JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
-    if not company_summary:
-        company_summary = read_temp_file(COMPANY_SUMMARY_TEMP_FILE_NAME)
-    if not job_industry:
-        job_industry = read_temp_file(JOB_INDUSTRY_TEMP_FILE_NAME)
-    openai_client = OpenAIClient()
-    # prompt = (
-    #     f"You are an expert resume writer specializing in crafting resumes for professionals in the {job_industry} industry. "
-    #     f"Your task is to create a compelling, tailored resume that aligns with the job I'm applying for, highlighting my most relevant skills and experiences.\n\n"
-    #     f"**Job Description:**\n{job_description}\n\n"
-    #     f"**Company Summary:**\n{company_summary}\n\n"
-    #     f"**My Accomplishments and Experience:**\n{accomplishments}\n\n"
-    #     f"**Instructions:**\n"
-    #     f"- **Focus on Relevance**: Prioritize skills, experiences, and accomplishments that are most relevant to the job description and company values.\n"
-    #     f"- **Use Professional Language**: Employ a professional tone with strong action verbs and industry-specific terminology.\n"
-    #     f"- **Quantify Achievements**: Include measurable results and specific examples to demonstrate the impact of my work.\n"
-    #     f"- **Incorporate Keywords**: Use keywords from the job description to optimize the resume for Applicant Tracking Systems (ATS).\n"
-    #     f"- **Format**: Structure the resume in the following JSON format:\n"
-    #     f"```\n"
-    #     f"{{\n"
-    #     f"  \"Professional Summary\": \"Your professional summary here.\",\n"
-    #     f"  \"Work Experience\": [\n"
-    #     f"    {{\"title\": \"Job Title 1\", \"place\": \"Company Name 1\", \"date\": \"Date Range 1\", \"description\": \"[Description of responsibilities and achievements in this role in bullets points.]\"}},\n"
-    #     f"    {{\"title\": \"Job Title 2\", \"place\": \"Company Name 2\", \"date\": \"Date Range 2\", \"description\": \"[Description of responsibilities and achievements in this role in bullets points.]\"}},\n"
-    #     f"    ...\n"
-    #     f"  ],\n"
-    #     f"  \"Personal Projects\": [\n"
-    #     f"    {{\"title\": \"Project Title 1\", \"date\": \"Date Range 1\", \"description\": \"[Description of the project, your role, and achievements. in bullets points.]\"}},\n"
-    #     f"    {{\"title\": \"Project Title 2\", \"date\": \"Date Range 2\", \"description\": \"[Description of the project, your role, and achievements. in bullets points.]\"}},\n"
-    #     f"    ...\n"
-    #     f"  ],\n"
-    #     f"  \"Education\": [\n"
-    #     f"    {{\"title\": \"Degree or Certification 1\", \"place\": \"Institution Name 1\",  \"description\": \"[Relevant coursework, honors, or achievements. in bullets points.]\"}},\n"
-    #     f"    {{\"title\": \"Degree or Certification 2\", \"place\": \"Institution Name 2\",  \"description\": \"[Relevant coursework, honors, or achievements. in bullets points.]\"}},\n"
-    #     f"    ...\n"
-    #     f"  ],\n"
-    #     f"  \"Skills\": [\"Skill1\", \"Skill2\", ...],\n"
-    #     f"  \"Languages\": [\"Language1\", \"Language2\", ...]\n"
-    #     f"}}\n"
-    #     f"```\n"
-    #     f"- **Formatting Preferences**: Provide the output strictly in the JSON format shown above without any additional text or explanations.\n"
-    #     f"- **Customization**: Tailor each section to demonstrate how my background makes me an ideal candidate for this specific position.\n"
-    #     f"- **Exclude Personal Information**: Do not include personal details such as age, marital status, or photo.\n"
-    #     f"- **Avoid Repetition**: Ensure that the content is varied and that each point provides new information.\n\n"
-    #     f"Please generate the resume accordingly, ensuring that it is polished, professional, and positions me as a strong candidate for the role. Output the result in the specified JSON format only."
-    # )
-    prompt = (
-        f"You are an expert resume writer specializing in crafting resumes for professionals in the {job_industry} industry. "
-        f"Your task is to create a compelling, tailored resume that aligns with the job I'm applying for, highlighting my most relevant skills and experiences.\n\n"
-        f"**Job Description:**\n{job_description}\n\n"
-        f"**Company Summary:**\n{company_summary}\n\n"
-        f"**My Accomplishments and Experience:**\n{accomplishments}\n\n"
-        f"**Instructions:**\n"
-        f"- **Focus on Relevance**: Only include skills, experiences, and accomplishments that are directly relevant to the job description and company values.\n"
-        f"- **Exclude Irrelevant Content**: Do not include any accomplishments or experiences that are not pertinent to the job requirements.\n"
-        f"- **Use Professional Language**: Employ a professional tone with strong action verbs and industry-specific terminology.\n"
-        f"- **Quantify Achievements**: Include measurable results and specific examples to demonstrate the impact of my work.\n"
-        f"- **Incorporate Keywords**: Use keywords from the job description to optimize the resume for Applicant Tracking Systems (ATS).\n"
-        f"- **Format**: Structure the resume in the following JSON format:\n"
-        f"```\n"
-        f"{{\n"
-        f"  \"Professional Summary\": \"Your professional summary here.\",\n"
-        f"  \"Work Experience\": [\n"
-        f"    {{\"title\": \"Job Title 1\", \"place\": \"Company Name 1\", \"date\": \"Date Range 1\", \"description\": \"[Description of responsibilities and achievements in bullet points.]\"}},\n"
-        f"    {{\"title\": \"Job Title 2\", \"place\": \"Company Name 2\", \"date\": \"Date Range 2\", \"description\": \"[Description of responsibilities and achievements in bullet points.]\"}},\n"
-        f"    ...\n"
-        f"  ],\n"
-        f"  \"Personal Projects\": [\n"
-        f"    {{\"title\": \"Project Title 1\", \"date\": \"Date Range 1\", \"description\": \"[Description of the project, your role, and achievements in bullet points.]\"}},\n"
-        f"    {{\"title\": \"Project Title 2\", \"date\": \"Date Range 2\", \"description\": \"[Description of the project, your role, and achievements in bullet points.]\"}},\n"
-        f"    ...\n"
-        f"  ],\n"
-        f"  \"Education\": [\n"
-        f"    {{\"title\": \"Degree or Certification 1\", \"place\": \"Institution Name 1\", \"description\": \"[Relevant coursework, honors, or achievements in bullet points.]\"}},\n"
-        f"    {{\"title\": \"Degree or Certification 2\", \"place\": \"Institution Name 2\", \"description\": \"[Relevant coursework, honors, or achievements in bullet points.]\"}},\n"
-        f"    ...\n"
-        f"  ],\n"
-        f"  \"Skills\": [\"Skill1\", \"Skill2\", ...],\n"
-        f"  \"Languages\": [\"Language1\", \"Language2\", ...]\n"
-        f"}}\n"
-        f"```\n"
-        f"- **Formatting Preferences**: Provide the output strictly in the JSON format shown above without any additional text or explanations.\n"
-        f"- **Customization**: Tailor each section to demonstrate how my background makes me an ideal candidate for this specific position.\n"
-        f"- **Exclude Personal Information**: Do not include personal details such as age, marital status, or photo.\n"
-        f"- **Avoid Repetition**: Ensure that the content is varied and that each point provides new information.\n"
-        f"- **Emphasize Relevance**: Exclude any information that is not directly related to the job description or required qualifications.\n\n"
-        f"Please generate the resume accordingly, ensuring that it is polished, professional, and positions me as a strong candidate for the role. Output the result in the specified JSON format only."
-    )
-    if use_o1_model:
-        generated_resume_text = openai_client.generate_text(prompt, model="o1-preview-2024-09-12")
-    else:
-        generated_resume_text = openai_client.generate_text(prompt)
-    save_to_temp_file(generated_resume_text, GENERATED_RESUME_TEXT)
-    # print(generated_resume_text)
-    return generated_resume_text
+    job_description: Optional[str] = None,
+    company_summary: Optional[str] = None,
+    accomplishments: Optional[str] = None,
+    job_industry: Optional[str] = None,
+    use_o1_model: bool = False,
+    use_semantic_search: bool = True
+) -> str:
+    """Generate a tailored resume text in JSON format for proper docx formatting.
+    
+    Args:
+        job_description: Job description text (uses cached if None)
+        company_summary: Company summary text (uses cached if None)
+        accomplishments: Accomplishments text (uses cached if None)
+        job_industry: Industry name (uses cached if None)
+        use_o1_model: Whether to use o1 model instead of GPT-4
+        use_semantic_search: Whether to use semantic search for better matching
+        
+    Returns:
+        Generated resume text in JSON format
+    """
+    # Read inputs if not provided
+    if not all([accomplishments, job_description, company_summary, job_industry]):
+        accomplishments = accomplishments or read_temp_file(FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
+        job_description = job_description or read_temp_file(JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
+        company_summary = company_summary or read_temp_file(COMPANY_SUMMARY_TEMP_FILE_NAME)
+        job_industry = job_industry or read_temp_file(JOB_INDUSTRY_TEMP_FILE_NAME)
 
+    model_name = "gpt-4-turbo-preview" if not use_o1_model else "o1-preview-2024-09-12"
+
+    if use_semantic_search:
+        langchain_client = LangChainClient(model_name=model_name)
+        accomplishments_store = langchain_client.create_vector_store_from_text(accomplishments)
+        relevant_accomplishments = langchain_client.semantic_search(
+            accomplishments_store,
+            f"Job description: {job_description}",
+            k=10
+        )
+        accomplishments = "\n\n".join(doc.page_content for doc in relevant_accomplishments)
+        
+        resume_chain = create_resume_generation_chain(langchain_client, use_o1_model)
+        result = resume_chain({
+            "job_description": job_description,
+            "company_summary": company_summary,
+            "accomplishments": accomplishments,
+            "job_industry": job_industry
+        })
+        generated_resume_text = result["resume"]
+    else:
+        openai_client = OpenAIClient(model=model_name)
+        prompt = (
+            f"You are an expert resume writer specializing in ATS-optimized resumes for the {job_industry} industry. "
+            f"Create a compelling, tailored resume that aligns with the job requirements.\n\n"
+            f"**Job Description:**\n{job_description}\n\n"
+            f"**Company Summary:**\n{company_summary}\n\n"
+            f"**My Accomplishments and Experience:**\n{accomplishments}\n\n"
+            f"**CRITICAL: Return ONLY valid JSON in this exact format:**\n"
+            f"{{\n"
+            f"  \"Professional Summary\": \"3-4 sentence compelling summary\",\n"
+            f"  \"Work Experience\": [\n"
+            f"    {{\"title\": \"Job Title\", \"place\": \"Company Name\", \"date\": \"Date Range\", \"description\": [\"Achievement 1\", \"Achievement 2\", \"Achievement 3\"]}},\n"
+            f"    {{\"title\": \"Job Title 2\", \"place\": \"Company Name 2\", \"date\": \"Date Range 2\", \"description\": [\"Achievement 1\", \"Achievement 2\"]}}\n"
+            f"  ],\n"
+            f"  \"Personal Projects\": [\n"
+            f"    {{\"title\": \"Project Name\", \"date\": \"Date Range\", \"description\": [\"Project detail 1\", \"Project detail 2\"]}}\n"
+            f"  ],\n"
+            f"  \"Education\": [\n"
+            f"    {{\"title\": \"Degree Name\", \"place\": \"Institution\", \"date\": \"Date Range\", \"description\": [\"Relevant coursework\", \"Honors or achievements\"]}}\n"
+            f"  ],\n"
+            f"  \"Skills\": [\"Skill1\", \"Skill2\", \"Skill3\", \"Skill4\"],\n"
+            f"  \"Languages\": [\"Language1\", \"Language2\"]\n"
+            f"}}\n\n"
+            f"IMPORTANT GUIDELINES:\n"
+            f"- Use exact keywords from the job description\n"
+            f"- Quantify achievements with metrics when possible\n"
+            f"- Focus only on relevant experiences\n"
+            f"- Use strong action verbs\n"
+            f"- Return ONLY the JSON, no additional text or explanations\n"
+            f"- Ensure all JSON keys match exactly as shown above"
+        )
+        generated_resume_text = openai_client.generate_text(prompt)
+
+    save_to_temp_file(generated_resume_text, GENERATED_RESUME_TEXT)
+    return generated_resume_text
 # if __name__ == "__main__":
 #     generate_resume_text()
+
