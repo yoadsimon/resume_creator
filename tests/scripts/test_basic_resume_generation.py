@@ -1,12 +1,30 @@
+#!/usr/bin/env python3
+"""Basic tests for resume generation."""
+
 import os
 import sys
 import logging
 from pathlib import Path
+import pytest
 
 # Add the parent directory to the path so we can import the modules
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from run_all import create_resume_for_job_application
+from src.core.accomplishments import get_all_accomplishments, get_personal_details
+from src.core.company_summary import get_company_summary
+from src.core.job_description import get_job_description
+from src.core.industry import extract_job_industry
+from src.core.resume_text import generate_resume_text
+from src.core.assemble import assemble_new_resume
+from src.data.consts import (
+    RESUME_TEXT_TEMP_FILE_NAME,
+    JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME,
+    COMPANY_SUMMARY_TEMP_FILE_NAME,
+    FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME,
+    JOB_INDUSTRY_TEMP_FILE_NAME,
+)
+from src.utils.general_utils import read_temp_file, save_to_temp_file
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

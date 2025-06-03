@@ -1,11 +1,16 @@
+#!/usr/bin/env python3
+"""Module for writing resume to DOCX format."""
+
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+import docx2txt
 
-from utils.resume_details import ResumeDetails
+from src.utils.resume_details import ResumeDetails
 
 
 def set_paragraph_format(paragraph, font_size=9, space_after=Pt(0), line_spacing=1, left_indent=0):
+    """Set paragraph formatting."""
     paragraph_format = paragraph.paragraph_format
     paragraph_format.space_after = space_after
     paragraph.line_spacing = line_spacing
@@ -76,6 +81,7 @@ def add_professional_summary(document, resume_details):
         set_paragraph_format(heading, font_size=11, space_after=Pt(0))
         summary_paragraph = document.add_paragraph(resume_details.professional_summary)
         set_paragraph_format(summary_paragraph, font_size=9, space_after=Pt(6), left_indent=0.5)
+
 
 def add_section(
     document, heading_title, entries,
@@ -198,3 +204,15 @@ def write_resume_to_docx(resume_details: ResumeDetails, filename='result/resume.
         add_skills_and_languages(document, resume_details)
     document.save(filename)
     print(f"Resume saved as {filename}")
+
+
+def extract_text_from_docx(file_path: str) -> str:
+    """Extract text from a DOCX file.
+    
+    Args:
+        file_path: Path to the DOCX file
+        
+    Returns:
+        Extracted text from the DOCX file
+    """
+    return docx2txt.process(file_path)

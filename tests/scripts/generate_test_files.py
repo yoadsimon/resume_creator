@@ -1,4 +1,16 @@
+#!/usr/bin/env python3
+"""Script to generate test files."""
+
 import os
+import sys
+import logging
+from pathlib import Path
+
+# Add the parent directory to the path so we can import the modules
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
+from src.utils.open_ai import OpenAIClient
+from src.utils.general_utils import save_to_temp_file
 from docx import Document
 import shutil
 

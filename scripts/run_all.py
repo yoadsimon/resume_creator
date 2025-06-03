@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
-"""Main script to run the complete resume generation process."""
+"""Main script to run the complete resume generation pipeline."""
 
+import os
+import argparse
+from typing import Optional
 import logging
-from _1_get_accomplishments_and_personal_details import get_all_accomplishments, get_personal_details
-from _2_create_company_summary import create_company_summary
-from _3_extract_job_description_text import extract_job_description_text
-from _4_extract_job_industry import extract_job_industry
-from _5_generate_resume_text import generate_resume_text
-from _6_assemble_new_resume import assemble_new_resume
+
+from src.core.accomplishments import get_all_accomplishments, get_personal_details
+from src.core.company_summary import get_company_summary
+from src.core.job_description import get_job_description
+from src.core.industry import extract_job_industry
+from src.core.resume_text import generate_resume_text
+from src.core.assemble import assemble_new_resume
+from src.data.consts import (
+    RESUME_TEXT_TEMP_FILE_NAME,
+    JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME,
+    COMPANY_SUMMARY_TEMP_FILE_NAME,
+    FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME,
+    JOB_INDUSTRY_TEMP_FILE_NAME,
+)
+from src.utils.general_utils import read_temp_file, save_to_temp_file
+from src.utils.docx_writer import extract_text_from_docx
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -47,12 +60,12 @@ def create_resume_for_job_application(
     )
 
     # Get company and job information
-    company_summary = create_company_summary(
+    company_summary = get_company_summary(
         company_base_link=company_base_link,
         company_name=company_name,
         force_run=force_run_all
     )
-    job_description_text = extract_job_description_text(
+    job_description_text = get_job_description(
         job_description_link=job_description_link,
         force_run=force_run_all
     )

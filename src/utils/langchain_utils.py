@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Utility functions and classes for LangChain integration.
 This module provides tools for working with LangChain, including prompt templates,
@@ -7,9 +8,8 @@ LLM chains, and vector databases for semantic search.
 import os
 from typing import List, Dict, Any, Optional
 
-from langchain_core.prompts import PromptTemplate
-from langchain.chains.llm import LLMChain
-from langchain.chains.sequential import SequentialChain
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain, SequentialChain
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
@@ -18,7 +18,7 @@ from langchain.chains.retrieval_qa.base import RetrievalQA
 import tempfile
 import shutil
 
-from utils.open_ai import OpenAIClient
+from src.utils.open_ai import OpenAIClient
 
 
 class LangChainClient:
@@ -371,3 +371,39 @@ def create_personal_details_extraction_chain(client: LangChainClient):
     )
     
     return client.create_llm_chain(prompt, output_key="personal_details")
+
+
+def create_industry_extraction_chain(client: LangChainClient):
+    """
+    Create a chain for extracting the primary industry from job description and company summary.
+    
+    Args:
+        client (LangChainClient): The LangChain client.
+        
+    Returns:
+        LLMChain: The industry extraction chain.
+    """
+    template = """
+    Please identify the primary industry for the following job posting based on the job description and company summary provided.
+    
+    ### Job Description:
+    {job_description}
+    
+    ### Company Summary:
+    {company_summary}
+    
+    ### Instructions:
+    - Analyze the texts to determine the main industry
+    - Provide a concise answer with only the industry name
+    - Do not include any additional information or commentary
+    - Do not include the word "industry" in your response
+    
+    ### Response:
+    """
+    
+    prompt = client.create_prompt_template(
+        template=template,
+        input_variables=["job_description", "company_summary"]
+    )
+    
+    return client.create_llm_chain(prompt, output_key="industry")

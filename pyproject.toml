@@ -1,0 +1,27 @@
+[project]
+name = "resume-creator"
+version = "0.1.0"
+description = "A FastAPI-based application for generating tailored resumes using OpenAI and LangChain."
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+requires-python = ">=3.13"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--maxfail=1 --disable-warnings"
+
+[project.dependencies]
+fastapi = "*"
+uvicorn = "*"
+openai = "*"
+langchain = "*"
+python-dotenv = "*"
+docx = "*"
+pytest = "*"
+tqdm = "*"
+requests = "*"
+beautifulsoup4 = "*"
+tiktoken = "*" 

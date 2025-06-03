@@ -1,32 +1,98 @@
-# Python cache and compiled files
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
-# Virtual environment
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
 resume_creator_venv/
+ENV/
+.env/
+.venv/
 
-# Temporary and log files
-*.log
-*.txt
-!temp/
+# PyInstaller
+*.manifest
+*.spec
 
-# System-specific files
-.DS_Store
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
-# PyCharm project files
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# VS Code
+.vscode/
+
+# PyCharm
 .idea/
+
+# macOS
+.DS_Store
 
 # Environment variables
 .env
 .env.*
 
-# Python packages
-*.egg-info/
+# Data folders
+/data/temp/
+/data/result/
+/data/inputs/
 
-# Generated files and directories
-/result/
-/inputs/*.docx
-!inputs/sample_resume.docx
+# Result and temp folders at root
+result/
+temp/
 
-# Git files
-.gitignore
+# Docker
+**/.dockerignore
+
+# Logs
+*.log
+
+# Misc
+*.bak
+*.swp
+*.swo

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+"""Classes for managing resume details and structure."""
+
+from typing import List, Optional
+
 class MainResumeEntry:
     def __init__(
             self, title: str, place: str = None, date: str = None,

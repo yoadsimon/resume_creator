@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Utility functions for chat-based resume generation.
 This module provides tools for creating and managing chat-based interactions
@@ -13,7 +14,7 @@ from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 
-from utils.langchain_utils import LangChainClient
+from src.utils.langchain_utils import LangChainClient
 
 
 class ChatSession:

@@ -1,12 +1,16 @@
+#!/usr/bin/env python3
+"""Tests for semantic search functionality."""
+
 import os
 import sys
 import logging
 from pathlib import Path
+import pytest
 
 # Add the parent directory to the path so we can import the modules
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from utils.langchain_utils import LangChainClient
+from src.utils.langchain_utils import LangChainClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

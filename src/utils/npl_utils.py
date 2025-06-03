@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Utility functions for natural language processing."""
+
 from tiktoken import encoding_for_model
 
 class Encoder:

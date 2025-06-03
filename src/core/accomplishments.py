@@ -4,16 +4,16 @@
 import docx2txt
 from typing import Optional
 
-from inputs.consts import (
+from src.data.consts import (
     RESUME_TEXT_TEMP_FILE_NAME,
     DEFAULT_ACCOMPLISHMENTS_BULLETS_POINTS_PROMPT,
     FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME,
     SECONDARY_ACCOMPLISHMENTS_BULLETS_POINTS_PROMPT,
     PERSONAL_DETAILS_TEMP_FILE_NAME,
 )
-from utils.general_utils import read_temp_file, save_to_temp_file
-from utils.open_ai import OpenAIClient
-from utils.langchain_utils import (
+from src.utils.general_utils import read_temp_file, save_to_temp_file
+from src.utils.open_ai import OpenAIClient
+from src.utils.langchain_utils import (
     LangChainClient, 
     create_accomplishments_extraction_chain,
     create_combined_accomplishments_chain,
@@ -53,10 +53,12 @@ def generate_combined_accomplishments(resume_text: str, existing_accomplishments
     result = chain({ "existing_accomplishments": (existing_accomplishments or ""), "resume_text": resume_text })
     return (result["combined_accomplishments"] if existing_accomplishments else result["accomplishments"]).strip()
 
-def get_all_accomplishments(force_run: bool = False, accomplishments_file_path: Optional[str] = None, resume_file_path: Optional[str] = None) -> str:
+def get_all_accomplishments(resume_text: str = None, accomplishments_text: str = None, *, force_run: bool = False, accomplishments_file_path: Optional[str] = None, resume_file_path: Optional[str] = None) -> str:
     """Get all accomplishments from resume and accomplishments file.
 
     Args:
+        resume_text: Resume text content (takes precedence over file path)
+        accomplishments_text: Accomplishments text content (takes precedence over file path)
         force_run: Whether to force extraction even if cached
         accomplishments_file_path: Path to accomplishments file (optional)
         resume_file_path: Path to resume file (optional)
@@ -67,8 +69,16 @@ def get_all_accomplishments(force_run: bool = False, accomplishments_file_path: 
     updated_accomplishments = read_temp_file(FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
     if updated_accomplishments and not force_run:
         return updated_accomplishments
-    resume_text = extract_text_from_resume_docx(docx_file_path=resume_file_path, force_run=force_run)
-    existing_accomplishments = read_temp_file(accomplishments_file_path)
+    
+    # Use provided text or extract from file
+    if resume_text is None:
+        resume_text = extract_text_from_resume_docx(docx_file_path=resume_file_path, force_run=force_run)
+    
+    # Use provided accomplishments text or read from file
+    existing_accomplishments = accomplishments_text
+    if existing_accomplishments is None and accomplishments_file_path:
+        existing_accomplishments = read_temp_file(accomplishments_file_path)
+    
     updated_accomplishments = generate_combined_accomplishments(resume_text, existing_accomplishments)
     save_to_temp_file(updated_accomplishments, FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
     return updated_accomplishments

@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Module for assembling the final resume document from generated text."""
+"""Module for assembling the final resume."""
 
+import os
 import json
 import re
 from typing import Optional, Dict, Any
 
-from inputs.consts import GENERATED_RESUME_TEXT, PERSONAL_DETAILS_TEMP_FILE_NAME
-from utils.docx_writer import write_resume_to_docx
-from utils.general_utils import read_temp_file
-from utils.resume_details import ResumeDetails
-from _5_generate_resume_text import generate_resume_text
+from src.data.consts import (
+    RESUME_TEXT_TEMP_FILE_NAME,
+    PERSONAL_DETAILS_TEMP_FILE_NAME,
+    GENERATED_RESUME_TEXT,
+)
+from src.utils.general_utils import read_temp_file, save_to_temp_file
+from src.utils.resume_details import ResumeDetails
+from src.utils.docx_writer import write_resume_to_docx
+from src.core.resume_text import generate_resume_text
 
 def read_generated_resume_text_to_dict(
     generated_resume_text: Optional[str] = None,

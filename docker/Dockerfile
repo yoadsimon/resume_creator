@@ -17,13 +17,14 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Copy application code
-COPY utils/ ./utils/
-COPY inputs/ ./inputs/
-COPY *.py ./
+# Copy the entire src directory
+COPY src/ ./src/
 
 # Create necessary directories
 RUN mkdir -p temp result logs
+
+# Set Python path to include the app directory
+ENV PYTHONPATH=/app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
@@ -32,5 +33,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Start the full API application
-CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Start the API application
+CMD ["python", "-m", "uvicorn", "src.api.api:app", "--host", "0.0.0.0", "--port", "8000"] 

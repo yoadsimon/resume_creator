@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
+"""Script to run all tests."""
+
 import os
 import sys
 import logging
-import importlib
-import subprocess
 from pathlib import Path
+import pytest
+
+# Add the parent directory to the path so we can import the modules
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
+from src.utils.general_utils import read_temp_file, save_to_temp_file
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

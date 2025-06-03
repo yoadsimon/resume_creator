@@ -1,13 +1,23 @@
+#!/usr/bin/env python3
+"""Tests for chat interface."""
+
 import os
 import sys
 import logging
 import uuid
 from pathlib import Path
+import pytest
 
 # Add the parent directory to the path so we can import the modules
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from utils.chat_utils import create_chat_session, get_chat_session, delete_chat_session
+from src.utils.chat_utils import (
+    ChatSession,
+    create_chat_session,
+    get_chat_session,
+    delete_chat_session
+)
+from src.utils.langchain_utils import LangChainClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -6,6 +6,7 @@ COMPANY_DATA_TEXT_TEMP_FILE_NAME = "company_data_text"
 COMPANY_SUMMARY_TEMP_FILE_NAME = "company_summary"
 JOB_INDUSTRY_TEMP_FILE_NAME = "job_industry"
 PERSONAL_DETAILS_TEMP_FILE_NAME = "personal_details"
+COMPANY_NAME_TEMP_FILE_NAME = "company_name"
 ##
 
 GENERATED_RESUME_TEXT = "generated_resume_text"

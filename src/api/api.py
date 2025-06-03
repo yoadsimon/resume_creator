@@ -1,11 +1,15 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-import shutil
+#!/usr/bin/env python3
+"""FastAPI server for resume generation."""
+
 import os
-import traceback
+import shutil
 import logging
-from typing import Optional, List
+from typing import Optional
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+import traceback
+from typing import List
 import docx2txt
 import requests
 from bs4 import BeautifulSoup
@@ -14,22 +18,31 @@ import asyncio
 import PyPDF2
 import io
 
-# Import the proper resume generation functions
-from _5_generate_resume_text import generate_resume_text
-from _6_assemble_new_resume import assemble_new_resume
-from _1_get_accomplishments_and_personal_details import generate_combined_accomplishments, get_personal_details
-from _2_create_company_summary import create_company_summary
-from _3_extract_job_description_text import extract_job_description_text
-from _4_extract_job_industry import extract_job_industry
-from utils.general_utils import save_to_temp_file
-from inputs.consts import RESUME_TEXT_TEMP_FILE_NAME, FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME
+from src.core.accomplishments import get_all_accomplishments, get_personal_details
+from src.core.company_summary import get_company_summary
+from src.core.job_description import get_job_description
+from src.core.industry import extract_job_industry
+from src.core.resume_text import generate_resume_text
+from src.core.assemble import assemble_new_resume
+from src.data.consts import (
+    RESUME_TEXT_TEMP_FILE_NAME,
+    JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME,
+    COMPANY_SUMMARY_TEMP_FILE_NAME,
+    FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME,
+    JOB_INDUSTRY_TEMP_FILE_NAME,
+)
+from src.utils.general_utils import read_temp_file, save_to_temp_file
+from src.utils.docx_writer import extract_text_from_docx
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv()
+try:
+    load_dotenv()
+except Exception as e:
+    logger.warning(f"Could not load .env file: {e}. Using environment variables directly.")
 
 # Verify OpenAI API key is set
 api_key = os.getenv("OPEN_AI_TOKEN")
@@ -50,10 +63,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-def extract_text_from_docx(file_path: str) -> str:
-    """Extract text from a DOCX file."""
-    return docx2txt.process(file_path)
 
 def extract_text_from_url(url: str) -> str:
     """Extract text from a URL."""
@@ -87,51 +96,70 @@ async def generate_resume(
         
         # Save uploaded files and extract text
         resume_file_path = f"temp/{resume_file.filename}"
+        
+        # Reset file pointer to beginning before reading
+        await resume_file.seek(0)
+        
         with open(resume_file_path, "wb") as buffer:
-            shutil.copyfileobj(resume_file.file, buffer)
+            content = await resume_file.read()
+            buffer.write(content)
         logger.info(f"Saved resume file to {resume_file_path}")
         
         resume_text = extract_text_from_docx(resume_file_path)
+        logger.info(f"Extracted resume text (first 100 chars): {resume_text[:100]}")
         save_to_temp_file(resume_text, RESUME_TEXT_TEMP_FILE_NAME)
         
         # Handle accomplishments file
         accomplishments_text = ""
         if accomplishments_file:
             accomplishments_file_path = f"temp/{accomplishments_file.filename}"
+            
+            # Reset file pointer to beginning before reading
+            await accomplishments_file.seek(0)
+            
+            # Save the file to disk first
             with open(accomplishments_file_path, "wb") as buffer:
-                shutil.copyfileobj(accomplishments_file.file, buffer)
-            with open(accomplishments_file_path, 'r') as f:
+                content = await accomplishments_file.read()
+                buffer.write(content)
+            
+            # Then read it as text
+            with open(accomplishments_file_path, 'r', encoding='utf-8') as f:
                 accomplishments_text = f.read()
-            logger.info("Processed accomplishments file")
+            logger.info(f"Processed accomplishments file (first 100 chars): {accomplishments_text[:100]}")
         
         # Step 1: Generate combined accomplishments
         logger.info("Generating combined accomplishments")
-        combined_accomplishments = generate_combined_accomplishments(
+        combined_accomplishments = get_all_accomplishments(
             resume_text, accomplishments_text
         )
+        logger.info(f"Generated combined accomplishments (first 100 chars): {combined_accomplishments[:100]}")
         save_to_temp_file(combined_accomplishments, FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
         
         # Step 2: Extract job description
         logger.info("Extracting job description")
-        extract_job_description_text(force_run=True, job_description_link=job_description_link)
+        job_description = get_job_description(force_run=True, job_description_link=job_description_link)
+        logger.info(f"Extracted job description (first 100 chars): {job_description[:100]}")
         
         # Step 3: Create company summary
         logger.info("Creating company summary")
-        create_company_summary(
+        company_summary = get_company_summary(
             force_run=True, 
             company_base_link=company_base_link, 
             company_name=company_name
         )
+        logger.info(f"Created company summary (first 100 chars): {company_summary[:100]}")
         
         # Step 4: Extract job industry
         logger.info("Extracting job industry")
-        extract_job_industry(force_run=True)
+        job_industry = extract_job_industry(force_run=True)
+        logger.info(f"Extracted job industry: {job_industry}")
         
         # Step 5: Generate resume text (JSON format)
         logger.info("Generating resume text")
         generated_resume_json = generate_resume_text(
             use_o1_model=use_o1_model
         )
+        logger.info(f"Generated resume JSON (first 100 chars): {generated_resume_json[:100]}")
         
         # Step 6: Extract personal details
         logger.info("Extracting personal details")
@@ -139,6 +167,7 @@ async def generate_resume(
             force_run=True, 
             resume_file_path=resume_file_path
         )
+        logger.info(f"Extracted personal details (first 100 chars): {personal_details[:100]}")
         
         # Step 7: Assemble final formatted resume
         logger.info("Assembling final resume")
@@ -159,6 +188,18 @@ async def generate_resume(
         
         # Return the properly formatted docx file
         result_file = 'result/resume.docx'
+        if not os.path.exists(result_file):
+            raise HTTPException(status_code=500, detail="Generated resume file not found")
+        
+        file_size = os.path.getsize(result_file)
+        logger.info(f"Result file size: {file_size} bytes")
+        
+        if file_size < 1000:  # If file is suspiciously small
+            with open(result_file, 'rb') as f:
+                content = f.read()
+                logger.error(f"Small file content: {content}")
+            raise HTTPException(status_code=500, detail="Generated resume file is too small")
+        
         return FileResponse(
             path=result_file,
             filename='resume.docx',

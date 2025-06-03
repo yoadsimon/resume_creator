@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Colors for output
 RED='\033[0;31m'
@@ -32,10 +32,11 @@ fi
 
 # Get the directory where the script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Check if required files exist using relative paths
-RESUME_FILE="inputs/resume.docx"
-ACCOMPLISHMENTS_FILE="inputs/short_accomplishments.txt"
+RESUME_FILE="$PROJECT_ROOT/data/inputs/resume.docx"
+ACCOMPLISHMENTS_FILE="$PROJECT_ROOT/data/inputs/short_accomplishments.txt"
 
 if [ ! -f "$RESUME_FILE" ]; then
     print_error "Resume file not found at: $RESUME_FILE"
@@ -47,9 +48,13 @@ if [ ! -f "$ACCOMPLISHMENTS_FILE" ]; then
     exit 1
 fi
 
+# Stop any running containers
+print_status "Stopping any running containers..."
+docker compose -f "$PROJECT_ROOT/docker/docker-compose.yml" down
+
 # Start the server using docker compose
 print_status "Starting Resume Creator server..."
-docker compose up -d
+cd "$PROJECT_ROOT/docker" && docker compose up -d
 
 # Wait for the server to be ready
 print_status "Waiting for server to be ready..."
@@ -90,11 +95,11 @@ if [ -f "$RESPONSE_FILE" ] && [ -s "$RESPONSE_FILE" ]; then
     print_status "Resume saved to: $RESPONSE_FILE"
     
     # Create result directory if it doesn't exist
-    mkdir -p result
+    mkdir -p "$PROJECT_ROOT/data/result"
     
     # Copy the generated resume to the result directory
-    cp "$RESPONSE_FILE" "result/test_resume.docx"
-    print_status "Copied resume to: result/test_resume.docx"
+    cp "$RESPONSE_FILE" "$PROJECT_ROOT/data/result/test_resume.docx"
+    print_status "Copied resume to: $PROJECT_ROOT/data/result/test_resume.docx"
 else
     print_error "Failed to generate resume"
     docker compose logs
@@ -103,6 +108,6 @@ fi
 # Cleanup
 print_status "Cleaning up..."
 rm -rf "$TEMP_DIR"
-# docker compose down
+docker compose -f "$PROJECT_ROOT/docker/docker-compose.yml" down
 
 print_status "Test completed!" 

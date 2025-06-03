@@ -1,17 +1,23 @@
+#!/usr/bin/env python3
+"""Tests for LLM chains."""
+
 import os
 import sys
 import logging
 from pathlib import Path
+import pytest
 
 # Add the parent directory to the path so we can import the modules
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from utils.langchain_utils import (
-    LangChainClient, 
+from src.utils.langchain_utils import (
+    LangChainClient,
     create_resume_generation_chain,
     create_accomplishments_extraction_chain,
+    create_combined_accomplishments_chain,
     create_personal_details_extraction_chain
 )
+from src.utils.open_ai import OpenAIClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

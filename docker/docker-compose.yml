@@ -3,8 +3,8 @@ version: '3.8'
 services:
   resume-creator:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       # Enable BuildKit for faster builds
       cache_from:
         - python:3.13-slim
@@ -18,15 +18,15 @@ services:
       - OPEN_AI_ORGANIZATION_ID=${OPEN_AI_ORGANIZATION_ID}
       - OPEN_AI_PROJECT_ID=${OPEN_AI_PROJECT_ID}
       - OPEN_AI_TOKEN=${OPEN_AI_TOKEN}
-      # Performance optimizations
+      # Python environment settings
+      - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
     volumes:
-      # Mount only necessary directories for persistence
-      - ./temp:/app/temp
-      - ./result:/app/result
-      # Remove source code mount for production performance
-      # - .:/app  # Only enable for development
+      # Mount data directories for persistence
+      - ../data/temp:/app/temp
+      - ../data/result:/app/result
+      - ../data/inputs:/app/data/inputs
     restart: unless-stopped
     deploy:
       resources:

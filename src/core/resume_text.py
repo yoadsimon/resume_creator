@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from inputs.consts import (
+from src.data.consts import (
     RESUME_TEXT_TEMP_FILE_NAME,
     JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME,
     COMPANY_SUMMARY_TEMP_FILE_NAME,
@@ -11,9 +11,9 @@ from inputs.consts import (
     JOB_INDUSTRY_TEMP_FILE_NAME,
     GENERATED_RESUME_TEXT
 )
-from utils.general_utils import read_temp_file, save_to_temp_file
-from utils.open_ai import OpenAIClient
-from utils.langchain_utils import LangChainClient, create_resume_generation_chain
+from src.utils.general_utils import read_temp_file, save_to_temp_file
+from src.utils.open_ai import OpenAIClient
+from src.utils.langchain_utils import LangChainClient, create_resume_generation_chain
 
 def generate_resume_text(job_description: Optional[str] = None, company_summary: Optional[str] = None, accomplishments: Optional[str] = None, job_industry: Optional[str] = None, use_o1_model: bool = False) -> str:
     """Generate a tailored resume text in JSON format for proper docx formatting.

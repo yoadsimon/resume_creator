@@ -8,24 +8,46 @@ A FastAPI-based application that generates tailored resumes using OpenAI's GPT m
 
 ```
 resume_creator/
-├── api.py                  # FastAPI app and endpoints
-├── _1_get_accomplishments_and_personal_details.py
-├── _2_create_company_summary.py
-├── _3_extract_job_description_text.py
-├── _4_extract_job_industry.py
-├── _5_generate_resume_text.py
-├── _6_assemble_new_resume.py
-├── utils/                  # Utility modules (OpenAI, etc.)
-├── inputs/                 # Input files (resumes, prompts, etc.)
-├── temp/                   # Temporary files (auto-generated)
-├── result/                 # Output resumes
-├── requirements.txt        # Python dependencies
-└── README.md               # Project documentation
+├── src/                      # Source code (importable as a package)
+│   ├── core/                # Core resume creation logic (main pipeline steps)
+│   ├── api/                 # FastAPI server
+│   ├── utils/               # Utility modules (OpenAI, LangChain, docx, etc.)
+│   └── data/                # Constants and config
+├── tests/                   # All tests (unit, integration, E2E)
+│   ├── scripts/            # Integration/E2E test scripts
+│   └── data/               # Test data (sample resumes, etc.)
+├── scripts/                 # Helper scripts (run, test, API test, etc.)
+├── data/                    # Input, temp, and result files (runtime data)
+│   ├── inputs/             # Input files (job descriptions, etc.)
+│   ├── temp/               # Temporary files generated during processing
+│   └── result/             # Output files (generated resumes)
+├── docker/                  # Docker configuration files
+├── requirements/            # Python dependencies
+├── .env.example             # Example environment variables
+├── .gitignore               # Files and folders to ignore in git
+└── README.md
 ```
+
+### Directory Descriptions
+
+- `src/`: All source code, importable as a package
+  - `core/`: Main business logic for resume creation
+  - `api/`: FastAPI server
+  - `utils/`: Utility modules (OpenAI, LangChain, docx, etc.)
+  - `data/`: Constants and configuration
+- `tests/`: All tests (unit, integration, E2E)
+  - `scripts/`: Integration/E2E test scripts
+  - `data/`: Test data (sample resumes, etc.)
+- `scripts/`: Helper scripts for running the application and tests
+- `data/`: Runtime data (inputs, temp, results)
+- `docker/`: Docker configuration files
+- `requirements/`: Python package requirements files
+- `.env.example`: Example environment variables (copy to `.env` and fill in your secrets)
+- `.gitignore`: Files and folders to ignore in git
 
 ---
 
-## 🚀 How to Run
+## 🚀 Development Workflow
 
 1. **Clone the repository:**
    ```bash
@@ -39,54 +61,32 @@ resume_creator/
    pip install -r requirements.txt
    cp env.example .env  # Add your OpenAI credentials to .env
    ```
-3. **Start the API server:**
+3. **Run the API server:**
    ```bash
-   uvicorn api:app --reload
+   uvicorn src.api.api:app --reload
    ```
-   The API will be available at [http://localhost:8000](http://localhost:8000)
+4. **Run all tests:**
+   ```bash
+   bash scripts/run_tests.sh
+   # or
+   python -m pytest tests/
+   ```
+5. **Generate test data:**
+   ```bash
+   python tests/scripts/generate_test_files.py
+   ```
 
 ---
 
-## 📊 API Overview
+## 📦 .env and .gitignore
 
-### Generate Resume
-**POST** `/generate_resume`
-- **Description:** Generate a tailored resume based on your resume, accomplishments, job description, and company info.
-- **Request:** `multipart/form-data`
-  - `resume_file`: `.docx` file (required)
-  - `accomplishments_file`: `.txt` file (required)
-  - `job_description_link`: URL (required)
-  - `company_base_link`: URL (required)
-  - `company_name`: string (optional)
-  - `use_o1_model`: boolean (optional)
-- **Response:** JSON with generated resume content
-
-### Interactive API Docs
-- Visit [http://localhost:8000/docs](http://localhost:8000/docs) after starting the server for a full, interactive OpenAPI/Swagger UI.
-
----
-
-## 📝 Example Workflow Diagram
-
-```
-[Resume DOCX]   [Accomplishments TXT]   [Job Description URL]   [Company URL]
-      |                  |                        |                     |
-      |                  |                        |                     |
-      +------------------+------------------------+---------------------+
-                                 |
-                        [API: /generate_resume]
-                                 |
-                        [LLM Processing Pipeline]
-                                 |
-                        [Generated Resume JSON]
-                                 |
-                        [DOCX Resume Output]
-```
+- **.env.example**: Copy to `.env` and fill in your OpenAI and other secrets. Never commit `.env` to git.
+- **.gitignore**: Ignores venv, temp, result, .env, and other non-source files.
 
 ---
 
 ## 📚 More Info
-- All temporary and output files are stored in `temp/` and `result/`.
+- All temporary and output files are stored in `data/temp/` and `data/result/`.
 - For advanced usage, see the code in the numbered modules and `api.py`.
 - For testing, see the `tests/` directory.
 

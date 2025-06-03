@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Module for extracting job industry from job description and company summary."""
+"""Module for extracting job industry from job description."""
 
 from typing import Optional
 
-from inputs.consts import (
+from src.data.consts import (
+    JOB_INDUSTRY_TEMP_FILE_NAME,
     JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME,
-    COMPANY_SUMMARY_TEMP_FILE_NAME,
-    JOB_INDUSTRY_TEMP_FILE_NAME
+    COMPANY_SUMMARY_TEMP_FILE_NAME
 )
-from utils.general_utils import read_temp_file, save_to_temp_file
-from utils.open_ai import OpenAIClient
+from src.utils.general_utils import read_temp_file, save_to_temp_file
+from src.utils.langchain_utils import LangChainClient, create_industry_extraction_chain
 
 def extract_job_industry(
     force_run: bool = False,
@@ -35,24 +35,15 @@ def extract_job_industry(
     if not company_summary:
         company_summary = read_temp_file(COMPANY_SUMMARY_TEMP_FILE_NAME)
 
-    prompt = f"""
-            Please identify the primary industry for the following job posting based on the job description and company summary provided.
-            
-            ### Job Description:
-            {job_description}
-            
-            ### Company Summary:
-            {company_summary}
-            
-            ### Instructions:
-    - Analyze the texts to determine the main industry
-    - Provide a concise answer with only the industry name
-    - Do not include any additional information or commentary
-    - Do not include the word "industry" in your response
-            ### Response:
-            """
-
-    job_industry = OpenAIClient().generate_text(prompt).strip()
+    # Create and run the industry extraction chain
+    client = LangChainClient()
+    chain = create_industry_extraction_chain(client)
+    result = chain({
+        "job_description": job_description,
+        "company_summary": company_summary
+    })
+    
+    job_industry = result["industry"].strip()
     save_to_temp_file(job_industry, JOB_INDUSTRY_TEMP_FILE_NAME)
     return job_industry
 

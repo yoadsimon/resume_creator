@@ -1,18 +1,24 @@
+#!/usr/bin/env python3
+"""Module for creating company summary from job description."""
+
+import os
+from typing import Optional
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import time
 from tqdm import tqdm
 
-from inputs.consts import (
+from src.data.consts import (
+    COMPANY_SUMMARY_TEMP_FILE_NAME,
     COMPANY_DATA_TEXT_TEMP_FILE_NAME,
+    COMPANY_NAME_TEMP_FILE_NAME,
     COMPANY_SUMMARY_START_PROMPT,
     COMPANY_SUMMARY_END_PROMPT,
-    COMPANY_SUMMARY_TEMP_FILE_NAME
 )
-from utils.general_utils import save_to_temp_file, read_temp_file
-from utils.npl_utils import Encoder
-from utils.open_ai import OpenAIClient
+from src.utils.general_utils import save_to_temp_file, read_temp_file
+from src.utils.npl_utils import Encoder
+from src.utils.open_ai import OpenAIClient
 
 # In-memory cache for company summaries
 _company_cache = {}
@@ -94,7 +100,7 @@ def get_company_text_data(company_base_link):
     save_to_temp_file(company_text_data, COMPANY_DATA_TEXT_TEMP_FILE_NAME)
     return company_text_data
 
-def create_company_summary(force_run=False, company_base_link=None, company_name=None):
+def get_company_summary(force_run=False, company_base_link=None, company_name=None):
     """Generate a summary for a company using cached results when available.
     
     Args:

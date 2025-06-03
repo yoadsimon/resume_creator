@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Module for extracting job description text from URLs."""
+"""Module for extracting job description text from a URL."""
 
+import os
+from typing import Optional
 import requests
 from bs4 import BeautifulSoup
 import time
-from typing import Optional
 
-from inputs.consts import JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME
-from utils.general_utils import read_temp_file, save_to_temp_file
+from src.data.consts import JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME
+from src.utils.general_utils import read_temp_file, save_to_temp_file
 
 def extract_text_from_link(url: str) -> Optional[str]:
     """Extract text content from a URL with retry logic.
@@ -67,6 +68,24 @@ def extract_job_description_text(
         return job_description_text
 
     return extract_text_from_link(job_description_link)
+
+def get_job_description(
+    force_run: bool = False,
+    job_description_link: Optional[str] = None
+) -> Optional[str]:
+    """Get job description text, either from cache or by extracting from URL.
+    
+    Args:
+        force_run: Whether to force extraction even if cached
+        job_description_link: URL of the job description
+        
+    Returns:
+        Extracted job description text or None if extraction fails
+    """
+    return extract_job_description_text(
+        force_run=force_run,
+        job_description_link=job_description_link
+    )
 
 # if __name__ == "__main__":
 #     run()

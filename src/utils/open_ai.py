@@ -1,9 +1,18 @@
+#!/usr/bin/env python3
+"""OpenAI client and utility functions."""
+
 import os
+import json
 import time
+import openai
 from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
+# Load environment variables - handle missing .env gracefully
+try:
+    load_dotenv()
+except Exception:
+    pass  # Environment variables will be loaded from system/docker environment
 
 
 class OpenAIClient():
