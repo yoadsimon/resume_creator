@@ -107,7 +107,7 @@ async def generate_resume(
         # Step 1: Generate combined accomplishments
         logger.info("Generating combined accomplishments")
         combined_accomplishments = generate_combined_accomplishments(
-            resume_text, accomplishments_text, use_langchain=True
+            resume_text, accomplishments_text
         )
         save_to_temp_file(combined_accomplishments, FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME)
         
@@ -137,8 +137,7 @@ async def generate_resume(
         logger.info("Extracting personal details")
         personal_details = get_personal_details(
             force_run=True, 
-            resume_file_path=resume_file_path, 
-            use_langchain=True
+            resume_file_path=resume_file_path
         )
         
         # Step 7: Assemble final formatted resume

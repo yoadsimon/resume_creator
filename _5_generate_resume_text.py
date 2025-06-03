@@ -34,7 +34,7 @@ def generate_resume_text(job_description: Optional[str] = None, company_summary:
         company_summary = company_summary or read_temp_file(COMPANY_SUMMARY_TEMP_FILE_NAME)
         job_industry = job_industry or read_temp_file(JOB_INDUSTRY_TEMP_FILE_NAME)
 
-        model_name = "gpt-4-turbo-preview" if not use_o1_model else "o1-preview-2024-09-12"
+    model_name = "gpt-4-turbo-preview" if not use_o1_model else "o1-preview-2024-09-12"
 
     openai_client = OpenAIClient(model=model_name)
     prompt = (f"You are an expert resume writer specializing in ATS-optimized resumes for the {job_industry} industry. "
@@ -64,8 +64,8 @@ def generate_resume_text(job_description: Optional[str] = None, company_summary:
             f"- Focus only on relevant experiences\n"
             f"- Use strong action verbs\n"
             f"- Return ONLY the JSON, no additional text or explanations\n"
-              f"- Ensure all JSON keys match exactly as shown above")
-        generated_resume_text = openai_client.generate_text(prompt)
+            f"- Ensure all JSON keys match exactly as shown above")
+    generated_resume_text = openai_client.generate_text(prompt)
 
     save_to_temp_file(generated_resume_text, GENERATED_RESUME_TEXT)
     return generated_resume_text

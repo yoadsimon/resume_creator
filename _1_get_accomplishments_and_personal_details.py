@@ -48,7 +48,7 @@ def generate_combined_accomplishments(resume_text: str, existing_accomplishments
     Returns:
         Combined and formatted accomplishments
     """
-        langchain_client = LangChainClient()
+    langchain_client = LangChainClient()
     chain = (create_combined_accomplishments_chain(langchain_client) if existing_accomplishments else create_accomplishments_extraction_chain(langchain_client))
     result = chain({ "existing_accomplishments": (existing_accomplishments or ""), "resume_text": resume_text })
     return (result["combined_accomplishments"] if existing_accomplishments else result["accomplishments"]).strip()
@@ -87,10 +87,10 @@ def get_personal_details(force_run: bool = False, resume_file_path: Optional[str
     if personal_details and not force_run:
         return personal_details
     resume_text = extract_text_from_resume_docx(docx_file_path=resume_file_path, force_run=force_run)
-        langchain_client = LangChainClient()
-        chain = create_personal_details_extraction_chain(langchain_client)
+    langchain_client = LangChainClient()
+    chain = create_personal_details_extraction_chain(langchain_client)
     result = chain({ "resume_text": resume_text })
-        personal_details = result["personal_details"].strip()
+    personal_details = result["personal_details"].strip()
     save_to_temp_file(personal_details, PERSONAL_DETAILS_TEMP_FILE_NAME)
     return personal_details
 # if __name__ == "__main__":
