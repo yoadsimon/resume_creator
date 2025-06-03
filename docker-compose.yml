@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  resume-creator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Enable BuildKit for faster builds
+      cache_from:
+        - python:3.13-slim
+      # Build arguments for optimization
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: resume-creator-app
+    ports:
+      - "8000:8000"
+    environment:
+      - OPEN_AI_ORGANIZATION_ID=${OPEN_AI_ORGANIZATION_ID}
+      - OPEN_AI_PROJECT_ID=${OPEN_AI_PROJECT_ID}
+      - OPEN_AI_TOKEN=${OPEN_AI_TOKEN}
+      # Performance optimizations
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      # Mount only necessary directories for persistence
+      - ./temp:/app/temp
+      - ./result:/app/result
+      # Remove source code mount for production performance
+      # - .:/app  # Only enable for development
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - resume-network
+
+  # Optional: Add a database service for future enhancements
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: resume-creator-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - resume-network
+
+networks:
+  resume-network:
+    driver: bridge
+
+# volumes:
+#   redis_data: 
+
+# Optional: Add development override
+# Create docker-compose.override.yml for development with:
+# services:
+#   resume-creator:
+#     volumes:
+#       - .:/app
+#     environment:
+#       - DEBUG=1 
