@@ -68,8 +68,7 @@ async def generate_resume(
     job_description_link: str = Form(...),
     company_base_link: str = Form(...),
     company_name: Optional[str] = Form(None),
-    use_o1_model: bool = Form(False),
-    use_semantic_search: bool = Form(True)
+    use_o1_model: bool = Form(False)
 ):
     """
     Generate a tailored, professionally formatted resume using the complete pipeline.
@@ -131,8 +130,7 @@ async def generate_resume(
         # Step 5: Generate resume text (JSON format)
         logger.info("Generating resume text")
         generated_resume_json = generate_resume_text(
-            use_o1_model=use_o1_model,
-            use_semantic_search=False  # Disable to avoid temperature issues
+            use_o1_model=use_o1_model
         )
         
         # Step 6: Extract personal details

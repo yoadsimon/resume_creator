@@ -1,6 +1,6 @@
 # Resume Creator API Tests
 
-This directory contains test scripts for the Resume Creator API, focusing on testing the LangChain integration and other features.
+This directory contains test scripts for the Resume Creator API, focusing on testing the core functionality and features.
 
 ## Test Structure
 
@@ -42,34 +42,18 @@ You can run each test script individually:
 
 #### 1. Basic Resume Generation Test
 
-Tests the basic resume generation functionality without using LangChain features:
+Tests the basic resume generation functionality:
 
 ```bash
 python test_basic_resume_generation.py
 ```
 
-#### 2. Semantic Search Test
-
-Tests the semantic search functionality using LangChain for finding relevant accomplishments:
-
-```bash
-python test_semantic_search.py
-```
-
-#### 3. Interactive Chat Interface Test
+#### 2. Interactive Chat Interface Test
 
 Tests the interactive chat interface for resume generation:
 
 ```bash
 python test_chat_interface.py
-```
-
-#### 4. LLM Chains Test
-
-Tests the LangChain LLM chains used in the resume generation process:
-
-```bash
-python test_llm_chains.py
 ```
 
 ### Running All Tests
@@ -98,21 +82,13 @@ python -m unittest discover -p "test_*.py"
 
 ### 1. Basic Resume Generation Test
 
-This test verifies that the basic resume generation functionality works correctly without using LangChain features. It:
+This test verifies that the basic resume generation functionality works correctly. It:
 
 - Loads sample resume and accomplishments files
-- Calls the resume generation function with LangChain disabled
+- Calls the resume generation function
 - Checks if a resume file is created
 
-### 2. Semantic Search Test
-
-This test verifies that the semantic search functionality works correctly. It:
-
-- Creates a vector store from sample accomplishments
-- Performs semantic searches with different job descriptions
-- Checks if relevant accomplishments are returned
-
-### 3. Interactive Chat Interface Test
+### 2. Interactive Chat Interface Test
 
 This test verifies that the interactive chat interface works correctly. It:
 
@@ -120,14 +96,6 @@ This test verifies that the interactive chat interface works correctly. It:
 - Sends messages and checks if responses are received
 - Tests getting chat history
 - Tests deleting the chat session
-
-### 4. LLM Chains Test
-
-This test verifies that the LangChain LLM chains work correctly. It:
-
-- Tests the accomplishments extraction chain
-- Tests the personal details extraction chain
-- Tests the resume generation chain
 
 ## Troubleshooting
 

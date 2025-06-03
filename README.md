@@ -1,6 +1,6 @@
 # Resume Creator API
 
-A FastAPI-based application that generates tailored resumes using LangChain and OpenAI's GPT models. This tool helps create customized resumes by analyzing job descriptions and company information to highlight the most relevant skills and experiences.
+A FastAPI-based application that generates tailored resumes using OpenAI's GPT models. This tool helps create customized resumes by analyzing job descriptions and company information to highlight the most relevant skills and experiences.
 
 ---
 
@@ -15,7 +15,7 @@ resume_creator/
 ├── _4_extract_job_industry.py
 ├── _5_generate_resume_text.py
 ├── _6_assemble_new_resume.py
-├── utils/                  # Utility modules (OpenAI, LangChain, etc.)
+├── utils/                  # Utility modules (OpenAI, etc.)
 ├── inputs/                 # Input files (resumes, prompts, etc.)
 ├── temp/                   # Temporary files (auto-generated)
 ├── result/                 # Output resumes
@@ -58,10 +58,7 @@ resume_creator/
   - `job_description_link`: URL (required)
   - `company_base_link`: URL (required)
   - `company_name`: string (optional)
-  - `force_run_all`: boolean (optional)
   - `use_o1_model`: boolean (optional)
-  - `use_langchain`: boolean (optional)
-  - `use_semantic_search`: boolean (optional)
 - **Response:** JSON with generated resume content
 
 ### Interactive API Docs
@@ -79,7 +76,7 @@ resume_creator/
                                  |
                         [API: /generate_resume]
                                  |
-                [LLM + LangChain Processing Pipeline]
+                        [LLM Processing Pipeline]
                                  |
                         [Generated Resume JSON]
                                  |

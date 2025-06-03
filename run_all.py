@@ -20,12 +20,10 @@ def create_resume_for_job_application(
         company_base_link: str,
         company_name: str = None,
         force_run_all: bool = False,
-        use_o1_model: bool = False,
-        use_langchain: bool = True,
-        use_semantic_search: bool = True
+        use_o1_model: bool = False
 ) -> None:
     """Create a tailored resume for a job application.
-    
+
     Args:
         resume_file_path: Path to the resume file
         accomplishments_file_path: Path to the accomplishments file
@@ -34,8 +32,6 @@ def create_resume_for_job_application(
         company_name: Name of the company (optional)
         force_run_all: Whether to force run all steps
         use_o1_model: Whether to use the o1 model
-        use_langchain: Whether to use LangChain for enhanced resume generation
-        use_semantic_search: Whether to use semantic search for better matching
     """
     logging.info("Starting resume creation process")
 
@@ -43,13 +39,11 @@ def create_resume_for_job_application(
     all_accomplishments = get_all_accomplishments(
         resume_file_path=resume_file_path,
         accomplishments_file_path=accomplishments_file_path,
-        force_run=force_run_all,
-        use_langchain=use_langchain
+        force_run=force_run_all
     )
     personal_details = get_personal_details(
         force_run=force_run_all,
-        resume_file_path=resume_file_path,
-        use_langchain=use_langchain
+        resume_file_path=resume_file_path
     )
 
     # Get company and job information
@@ -74,8 +68,7 @@ def create_resume_for_job_application(
         company_summary=company_summary,
         job_description=job_description_text,
         job_industry=job_industry,
-        use_o1_model=use_o1_model,
-        use_semantic_search=use_semantic_search
+        use_o1_model=use_o1_model
     )
     assemble_new_resume(
         generated_resume_text=resume_text,

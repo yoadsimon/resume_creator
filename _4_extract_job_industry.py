@@ -36,21 +36,21 @@ def extract_job_industry(
         company_summary = read_temp_file(COMPANY_SUMMARY_TEMP_FILE_NAME)
 
     prompt = f"""
-    Please identify the primary industry for the following job posting based on the job description and company summary provided.
-    
-    ### Job Description:
-    {job_description}
-    
-    ### Company Summary:
-    {company_summary}
-    
-    ### Instructions:
+            Please identify the primary industry for the following job posting based on the job description and company summary provided.
+            
+            ### Job Description:
+            {job_description}
+            
+            ### Company Summary:
+            {company_summary}
+            
+            ### Instructions:
     - Analyze the texts to determine the main industry
     - Provide a concise answer with only the industry name
     - Do not include any additional information or commentary
     - Do not include the word "industry" in your response
-    ### Response:
-    """
+            ### Response:
+            """
 
     job_industry = OpenAIClient().generate_text(prompt).strip()
     save_to_temp_file(job_industry, JOB_INDUSTRY_TEMP_FILE_NAME)

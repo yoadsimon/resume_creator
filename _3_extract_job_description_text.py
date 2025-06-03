@@ -14,7 +14,7 @@ def extract_text_from_link(url: str) -> Optional[str]:
     
     Args:
         url: URL to extract text from
-        
+
     Returns:
         Extracted text or None if extraction fails
     """

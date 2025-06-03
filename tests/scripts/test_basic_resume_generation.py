@@ -13,8 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def test_basic_resume_generation():
     """
-    Test the basic resume generation functionality without LangChain features.
-    This tests the original implementation of the resume creator.
+    Test the basic resume generation functionality without using LangChain features.
     """
     logging.info("Testing basic resume generation...")
     
@@ -26,21 +25,19 @@ def test_basic_resume_generation():
         logging.error("Sample files not found. Please run generate_test_files.py first.")
         return False
     
-    # Sample job description and company
-    job_description_link = "https://www.example.com/job/software-engineer"
-    company_base_link = "https://www.example.com/"
+    # Sample job description and company links
+    job_description_link = "https://example.com/job"
+    company_base_link = "https://example.com"
     
     try:
-        # Run the resume generation with LangChain disabled
+        # Run the resume generation
         create_resume_for_job_application(
             resume_file_path=resume_path,
             accomplishments_file_path=accomplishments_path,
             job_description_link=job_description_link,
             company_base_link=company_base_link,
             force_run_all=True,
-            use_o1_model=False,
-            use_langchain=False,
-            use_semantic_search=False
+            use_o1_model=False
         )
         
         # Check if the result file was created
