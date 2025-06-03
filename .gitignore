@@ -1,0 +1,32 @@
+# Python cache and compiled files
+__pycache__/
+*.pyc
+
+# Virtual environment
+resume_creator_venv/
+
+# Temporary and log files
+*.log
+*.txt
+!temp/
+
+# System-specific files
+.DS_Store
+
+# PyCharm project files
+.idea/
+
+# Environment variables
+.env
+.env.*
+
+# Python packages
+*.egg-info/
+
+# Generated files and directories
+/result/
+/inputs/*.docx
+!inputs/sample_resume.docx
+
+# Git files
+.gitignore
