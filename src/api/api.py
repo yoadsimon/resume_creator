@@ -137,6 +137,11 @@ async def generate_resume(
         # Step 2: Extract job description
         logger.info("Extracting job description")
         job_description = get_job_description(force_run=True, job_description_link=job_description_link)
+        
+        # Handle case where job description extraction fails
+        if job_description is None:
+            raise HTTPException(status_code=500, detail="Job description extraction failed for {job_description_link}, using fallback")
+
         logger.info(f"Extracted job description (first 100 chars): {job_description[:100]}")
         
         # Step 3: Create company summary

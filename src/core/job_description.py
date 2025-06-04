@@ -72,7 +72,7 @@ def extract_job_description_text(
 def get_job_description(
     force_run: bool = False,
     job_description_link: Optional[str] = None
-) -> Optional[str]:
+) -> str:
     """Get job description text, either from cache or by extracting from URL.
     
     Args:
@@ -80,10 +80,27 @@ def get_job_description(
         job_description_link: URL of the job description
         
     Returns:
-        Extracted job description text or None if extraction fails
+        Extracted job description text or fallback text if extraction fails
     """
-    return extract_job_description_text(
+    result = extract_job_description_text(
         force_run=force_run,
         job_description_link=job_description_link
     )
+    
+    # Provide fallback text if extraction failed
+    if result is None:
+        fallback_text = f"""
+Job Description: Unable to extract job description from the provided URL: {job_description_link}
+
+This may be due to:
+- Website access restrictions or blocking
+- Server timeout or processing delays  
+- Invalid or inaccessible URL
+
+Please manually provide key job requirements, responsibilities, and qualifications for optimal resume tailoring.
+"""
+        save_to_temp_file(fallback_text, JOB_DESCRIPTION_TEXT_TEMP_FILE_NAME)
+        return fallback_text
+    
+    return result
 
