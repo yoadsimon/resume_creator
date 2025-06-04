@@ -70,6 +70,42 @@ class SkillsLanguagesResponse(BaseModel):
     skills: List[str] = Field(description="List of technical and professional skills")
     languages: List[str] = Field(description="List of languages and proficiency levels")
 
+# Add new models for granular editing after the existing response models
+
+class EditSectionNameRequest(BaseModel):
+    old_section_name: str = Field(description="Current section name")
+    new_section_name: str = Field(description="New section name")
+
+class EditItemRequest(BaseModel):
+    section_key: str = Field(description="Section identifier")
+    item_index: int = Field(description="Index of item to edit")
+    field_name: str = Field(description="Field name to edit (title, place, date, etc.)")
+    new_value: str = Field(description="New value for the field")
+
+class EditBulletPointRequest(BaseModel):
+    section_key: str = Field(description="Section identifier")
+    item_index: int = Field(description="Index of item containing the bullet point")
+    bullet_index: int = Field(description="Index of bullet point to edit")
+    new_content: str = Field(description="New bullet point content")
+
+class AddRemoveItemRequest(BaseModel):
+    section_key: str = Field(description="Section identifier")
+    operation: str = Field(description="'add' or 'remove'")
+    item_index: Optional[int] = Field(default=None, description="Index for remove operation")
+    item_data: Optional[dict] = Field(default=None, description="Data for add operation")
+
+class AddRemoveBulletRequest(BaseModel):
+    section_key: str = Field(description="Section identifier")
+    item_index: int = Field(description="Index of item to modify")
+    operation: str = Field(description="'add' or 'remove'")
+    bullet_index: Optional[int] = Field(default=None, description="Index for remove operation")
+    bullet_content: Optional[str] = Field(default=None, description="Content for add operation")
+
+class GenericSuccessResponse(BaseModel):
+    success: bool = Field(description="Whether operation was successful")
+    message: str = Field(description="Success or error message")
+    updated_data: Optional[dict] = Field(default=None, description="Updated section data")
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -495,3 +531,351 @@ Improve the section based on the user's request and return it in the proper stru
     except Exception as e:
         logger.error(f"Error editing resume section: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error editing resume section: {str(e)}")
+
+# Add granular editing endpoints before the existing edit-section endpoint
+
+@app.post("/resume/edit-item-field", response_model=GenericSuccessResponse)
+async def edit_item_field(request: EditItemRequest):
+    """
+    Edit a specific field of an item in a resume section.
+    """
+    try:
+        structured_data_file = 'result/resume_structured.json'
+        if not os.path.exists(structured_data_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Load current structured data
+        with open(structured_data_file, 'r', encoding='utf-8') as f:
+            resume_data = json.load(f)
+        
+        # Handle professional_summary as a special case (it's a string, not a list)
+        if request.section_key == 'professional_summary':
+            if request.field_name == 'content':
+                resume_data['professional_summary'] = request.new_value
+                
+                # Save updated data
+                with open(structured_data_file, 'w', encoding='utf-8') as f:
+                    json.dump(resume_data, f, indent=2, ensure_ascii=False)
+                
+                # Optionally regenerate Word document
+                _regenerate_word_document(resume_data)
+                
+                return GenericSuccessResponse(
+                    success=True,
+                    message="Successfully updated professional summary",
+                    updated_data={"professional_summary": request.new_value}
+                )
+            else:
+                raise HTTPException(status_code=400, detail="Professional summary only supports 'content' field")
+        
+        # Get the section data for other sections
+        section_data = resume_data.get(request.section_key, [])
+        if not isinstance(section_data, list):
+            raise HTTPException(status_code=400, detail=f"Section {request.section_key} is not a list type")
+        
+        if request.item_index < 0 or request.item_index >= len(section_data):
+            raise HTTPException(status_code=400, detail="Item index out of range")
+        
+        # Update the specific field
+        if request.field_name not in section_data[request.item_index]:
+            raise HTTPException(status_code=400, detail=f"Field '{request.field_name}' not found in item")
+        
+        section_data[request.item_index][request.field_name] = request.new_value
+        
+        # Save updated data
+        with open(structured_data_file, 'w', encoding='utf-8') as f:
+            json.dump(resume_data, f, indent=2, ensure_ascii=False)
+        
+        # Optionally regenerate Word document
+        _regenerate_word_document(resume_data)
+        
+        return GenericSuccessResponse(
+            success=True,
+            message=f"Successfully updated {request.field_name} in {request.section_key}",
+            updated_data=section_data[request.item_index]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error editing item field: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error editing item field: {str(e)}")
+
+@app.post("/resume/edit-bullet-point", response_model=GenericSuccessResponse)
+async def edit_bullet_point(request: EditBulletPointRequest):
+    """
+    Edit a specific bullet point in a resume item.
+    """
+    try:
+        structured_data_file = 'result/resume_structured.json'
+        if not os.path.exists(structured_data_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Load current structured data
+        with open(structured_data_file, 'r', encoding='utf-8') as f:
+            resume_data = json.load(f)
+        
+        # Get the section data
+        section_data = resume_data.get(request.section_key, [])
+        if not isinstance(section_data, list):
+            raise HTTPException(status_code=400, detail=f"Section {request.section_key} is not a list type")
+        
+        if request.item_index < 0 or request.item_index >= len(section_data):
+            raise HTTPException(status_code=400, detail="Item index out of range")
+        
+        # Get description array
+        description = section_data[request.item_index].get('description', [])
+        if not isinstance(description, list):
+            raise HTTPException(status_code=400, detail="Item description is not a list")
+        
+        if request.bullet_index < 0 or request.bullet_index >= len(description):
+            raise HTTPException(status_code=400, detail="Bullet point index out of range")
+        
+        # Update the bullet point
+        description[request.bullet_index] = request.new_content
+        
+        # Save updated data
+        with open(structured_data_file, 'w', encoding='utf-8') as f:
+            json.dump(resume_data, f, indent=2, ensure_ascii=False)
+        
+        # Optionally regenerate Word document
+        _regenerate_word_document(resume_data)
+        
+        return GenericSuccessResponse(
+            success=True,
+            message=f"Successfully updated bullet point in {request.section_key}",
+            updated_data=section_data[request.item_index]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error editing bullet point: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error editing bullet point: {str(e)}")
+
+@app.post("/resume/manage-item", response_model=GenericSuccessResponse)
+async def manage_item(request: AddRemoveItemRequest):
+    """
+    Add or remove an entire item from a resume section.
+    """
+    try:
+        structured_data_file = 'result/resume_structured.json'
+        if not os.path.exists(structured_data_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Load current structured data
+        with open(structured_data_file, 'r', encoding='utf-8') as f:
+            resume_data = json.load(f)
+        
+        # Get the section data
+        section_data = resume_data.get(request.section_key, [])
+        if not isinstance(section_data, list):
+            raise HTTPException(status_code=400, detail=f"Section {request.section_key} is not a list type")
+        
+        if request.operation == "add":
+            if not request.item_data:
+                raise HTTPException(status_code=400, detail="Item data is required for add operation")
+            section_data.append(request.item_data)
+            message = f"Successfully added item to {request.section_key}"
+            
+        elif request.operation == "remove":
+            if request.item_index is None:
+                raise HTTPException(status_code=400, detail="Item index is required for remove operation")
+            if request.item_index < 0 or request.item_index >= len(section_data):
+                raise HTTPException(status_code=400, detail="Item index out of range")
+            removed_item = section_data.pop(request.item_index)
+            message = f"Successfully removed item from {request.section_key}"
+            
+        else:
+            raise HTTPException(status_code=400, detail="Operation must be 'add' or 'remove'")
+        
+        # Save updated data
+        with open(structured_data_file, 'w', encoding='utf-8') as f:
+            json.dump(resume_data, f, indent=2, ensure_ascii=False)
+        
+        # Optionally regenerate Word document
+        _regenerate_word_document(resume_data)
+        
+        return GenericSuccessResponse(
+            success=True,
+            message=message,
+            updated_data=section_data
+        )
+        
+    except Exception as e:
+        logger.error(f"Error managing item: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error managing item: {str(e)}")
+
+@app.post("/resume/manage-bullet", response_model=GenericSuccessResponse)
+async def manage_bullet_point(request: AddRemoveBulletRequest):
+    """
+    Add or remove a bullet point from a resume item.
+    """
+    try:
+        structured_data_file = 'result/resume_structured.json'
+        if not os.path.exists(structured_data_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Load current structured data
+        with open(structured_data_file, 'r', encoding='utf-8') as f:
+            resume_data = json.load(f)
+        
+        # Get the section data
+        section_data = resume_data.get(request.section_key, [])
+        if not isinstance(section_data, list):
+            raise HTTPException(status_code=400, detail=f"Section {request.section_key} is not a list type")
+        
+        if request.item_index < 0 or request.item_index >= len(section_data):
+            raise HTTPException(status_code=400, detail="Item index out of range")
+        
+        # Get description array
+        description = section_data[request.item_index].get('description', [])
+        if not isinstance(description, list):
+            section_data[request.item_index]['description'] = []
+            description = section_data[request.item_index]['description']
+        
+        if request.operation == "add":
+            if not request.bullet_content:
+                raise HTTPException(status_code=400, detail="Bullet content is required for add operation")
+            description.append(request.bullet_content)
+            message = f"Successfully added bullet point to {request.section_key}"
+            
+        elif request.operation == "remove":
+            if request.bullet_index is None:
+                raise HTTPException(status_code=400, detail="Bullet index is required for remove operation")
+            if request.bullet_index < 0 or request.bullet_index >= len(description):
+                raise HTTPException(status_code=400, detail="Bullet point index out of range")
+            removed_bullet = description.pop(request.bullet_index)
+            message = f"Successfully removed bullet point from {request.section_key}"
+            
+        else:
+            raise HTTPException(status_code=400, detail="Operation must be 'add' or 'remove'")
+        
+        # Save updated data
+        with open(structured_data_file, 'w', encoding='utf-8') as f:
+            json.dump(resume_data, f, indent=2, ensure_ascii=False)
+        
+        # Optionally regenerate Word document
+        _regenerate_word_document(resume_data)
+        
+        return GenericSuccessResponse(
+            success=True,
+            message=message,
+            updated_data=section_data[request.item_index]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error managing bullet point: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error managing bullet point: {str(e)}")
+
+@app.post("/resume/edit-bullet-with-ai", response_model=GenericSuccessResponse)
+async def edit_bullet_with_ai(request: EditBulletPointRequest):
+    """
+    Edit a specific bullet point using AI enhancement.
+    """
+    try:
+        structured_data_file = 'result/resume_structured.json'
+        if not os.path.exists(structured_data_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Load current structured data
+        with open(structured_data_file, 'r', encoding='utf-8') as f:
+            resume_data = json.load(f)
+        
+        # Get the section data
+        section_data = resume_data.get(request.section_key, [])
+        if not isinstance(section_data, list):
+            raise HTTPException(status_code=400, detail=f"Section {request.section_key} is not a list type")
+        
+        if request.item_index < 0 or request.item_index >= len(section_data):
+            raise HTTPException(status_code=400, detail="Item index out of range")
+        
+        # Get description array
+        description = section_data[request.item_index].get('description', [])
+        if not isinstance(description, list):
+            raise HTTPException(status_code=400, detail="Item description is not a list")
+        
+        if request.bullet_index < 0 or request.bullet_index >= len(description):
+            raise HTTPException(status_code=400, detail="Bullet point index out of range")
+        
+        # Get the current bullet point content
+        current_bullet = description[request.bullet_index]
+        
+        # Use AI to enhance the bullet point
+        from src.utils.langchain_utils import LangChainClient
+        from langchain.schema import HumanMessage
+        
+        langchain_client = LangChainClient(model_name="gpt-4o-mini")
+        
+        # Create specific prompt for bullet point enhancement
+        ai_prompt = f"""You are an expert resume writer. Improve the following bullet point to make it more impactful, quantified, and professional.
+
+Current bullet point: {current_bullet}
+
+User enhancement request: {request.new_content}
+
+Guidelines:
+1. Keep the content truthful and accurate
+2. Add quantified metrics where possible (percentages, numbers, time frames)
+3. Use strong action verbs
+4. Make it more specific and impactful
+5. Maintain professional tone
+6. Return ONLY the improved bullet point, nothing else
+
+Improved bullet point:"""
+
+        try:
+            response = langchain_client.llm.invoke([HumanMessage(content=ai_prompt)])
+            improved_bullet = response.content.strip()
+            
+            # Remove any quotes or extra formatting
+            improved_bullet = improved_bullet.strip('"').strip("'").strip()
+            
+            # Update the bullet point with AI-improved content
+            description[request.bullet_index] = improved_bullet
+            
+            # Save updated data
+            with open(structured_data_file, 'w', encoding='utf-8') as f:
+                json.dump(resume_data, f, indent=2, ensure_ascii=False)
+            
+            # Optionally regenerate Word document
+            _regenerate_word_document(resume_data)
+            
+            return GenericSuccessResponse(
+                success=True,
+                message=f"Successfully enhanced bullet point with AI in {request.section_key}",
+                updated_data=section_data[request.item_index]
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to get AI enhancement: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"AI enhancement failed: {str(e)}")
+        
+    except Exception as e:
+        logger.error(f"Error enhancing bullet point with AI: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error enhancing bullet point with AI: {str(e)}")
+
+def _regenerate_word_document(resume_data: dict, use_o1_model: bool = False):
+    """
+    Helper function to regenerate the Word document after edits.
+    """
+    try:
+        from src.core.assemble import assemble_new_resume
+        
+        # Create simplified data for regeneration
+        personal_info_json = json.dumps(resume_data["personal_info"])
+        resume_text_json = json.dumps({
+            "professional_summary": resume_data["professional_summary"],
+            "work_experience": resume_data["work_experience"], 
+            "personal_projects": resume_data["personal_projects"],
+            "education": resume_data["education"],
+            "skills": resume_data["skills"],
+            "languages": resume_data["languages"]
+        })
+        
+        # Regenerate the Word document
+        assemble_new_resume(
+            generated_resume_text=resume_text_json,
+            personal_info=personal_info_json,
+            use_o1_model=use_o1_model
+        )
+        logger.info("Regenerated Word document with updated content")
+        
+    except Exception as e:
+        logger.warning(f"Could not regenerate Word document: {str(e)}")
