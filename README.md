@@ -22,9 +22,9 @@ A modern full-stack application that generates tailored resumes using OpenAI's G
    cp env.example .env  # Add your OpenAI credentials to .env
    ```
 
-2. **Run the application:**
+2. **Run the application (production):**
    ```bash
-   ./run_app.sh
+   ./run_docker.sh
    ```
 
 3. **Access the application:**
@@ -55,13 +55,12 @@ resume_creator/
 │   ├── utils/              # Utility modules (OpenAI, LangChain, docx, etc.)
 │   └── data/               # Constants and config
 ├── tests/                  # All tests (unit, integration, E2E)
-├── scripts/               # Helper scripts
 ├── data/                  # Input, temp, and result files (runtime data)
 ├── docker/               # Docker configuration files
 │   ├── docker-compose.yml     # Production setup
 │   ├── docker-compose.dev.yml # Development setup
 │   └── Dockerfile.backend     # Backend container
-├── run_app.sh            # 🚀 Main script to run the application
+├── run_docker.sh         # 🚀 Main script to run the application
 ├── requirements.txt      # Python dependencies
 ├── .env.example         # Example environment variables
 └── README.md
@@ -93,14 +92,17 @@ resume_creator/
 
 ---
 
-## 🔧 Alternative Running Methods
+## 🔧 Development & Advanced Usage
 
-### Option 1: Development with Hot Reload
+### Development with Hot Reload
 ```bash
-bash scripts/run_dev.sh
+cd docker
+# Start with hot reload for both frontend and backend
+# (requires Docker Compose v2)
+docker compose -f docker-compose.dev.yml up --build
 ```
 
-### Option 2: Manual Development Setup
+### Manual Development Setup (no Docker)
 
 **Backend:**
 ```bash
@@ -118,7 +120,7 @@ npm install
 npm start
 ```
 
-### Option 3: Docker Commands
+### Docker Commands (if you want to run manually)
 ```bash
 # Production build and run
 cd docker && docker compose up --build
@@ -153,20 +155,6 @@ OPEN_AI_PROJECT_ID=your_project_id  # Optional
 - `GET /resume/download` - Download the generated resume file
 - `GET /health` - Health check endpoint
 - `GET /docs` - Interactive API documentation
-
----
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-bash scripts/run_tests.sh
-# or
-python -m pytest tests/
-
-# Generate test data
-python tests/scripts/generate_test_files.py
-```
 
 ---
 
