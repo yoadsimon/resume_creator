@@ -71,22 +71,25 @@ resume_creator/
 
 ## 🎯 Features
 
-### Current Features
+### ✅ Current Features
 - **Modern React UI**: Clean, responsive interface with Tailwind CSS
 - **File Upload**: Drag & drop support for resume (.docx) and accomplishments (.txt) files
 - **AI-Powered Generation**: Uses OpenAI GPT models to create tailored resumes
 - **Company Analysis**: Analyzes job descriptions and company information
-- **Resume Viewer**: View generated resume content in the browser
+- **Resume Viewer**: Professional document-style viewer with structured resume display
+- **AI-Powered Editing**: Click "Edit with AI" on any section to improve content with custom prompts
+- **Structured Responses**: Reliable Pydantic models ensure consistent AI editing results
+- **Persistent Data**: Resume data persists between app restarts - no need to regenerate
+- **Real-time Updates**: See changes immediately after AI editing
 - **Download**: Download generated resumes as .docx files
 - **Docker Support**: Full containerization for easy deployment
 
-### Coming Soon
-- **Resume Editor**: Edit resume content directly in the browser
+### 🔮 Coming Soon
 - **Section Management**: Add, remove, and reorder resume sections
-- **Real-time Preview**: See changes as you edit
 - **Multiple Export Formats**: PDF, HTML, and other formats
 - **Template Selection**: Choose from different resume templates
 - **Version History**: Track and revert to previous versions
+- **Batch Processing**: Edit multiple resumes at once
 
 ---
 
@@ -145,7 +148,8 @@ OPEN_AI_PROJECT_ID=your_project_id  # Optional
 ## 🔧 API Endpoints
 
 - `POST /generate_resume` - Generate a tailored resume
-- `GET /resume/content` - Get resume content as JSON
+- `GET /resume/content` - Get resume content as structured JSON
+- `POST /resume/edit-section` - Edit specific resume sections using AI
 - `GET /resume/download` - Download the generated resume file
 - `GET /health` - Health check endpoint
 - `GET /docs` - Interactive API documentation
