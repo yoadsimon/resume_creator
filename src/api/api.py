@@ -4,18 +4,19 @@
 import os
 import shutil
 import logging
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import traceback
-from typing import List
 import docx2txt
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import PyPDF2
 import io
+import json
+from pydantic import BaseModel, Field
 
 from src.core.accomplishments import get_all_accomplishments, get_personal_details
 from src.core.company_summary import get_company_summary
@@ -34,6 +35,40 @@ from src.data.consts import (
 )
 from src.utils.general_utils import read_temp_file, save_to_temp_file
 from src.utils.docx_writer import extract_text_from_docx
+
+# Pydantic models for structured responses
+class ExperienceItem(BaseModel):
+    title: str = Field(description="Job title or position")
+    place: str = Field(description="Company or organization name")
+    date: str = Field(description="Date range for the position")
+    description: List[str] = Field(description="List of achievements and responsibilities")
+
+class ProjectItem(BaseModel):
+    title: str = Field(description="Project name")
+    date: str = Field(description="Date range for the project")
+    description: List[str] = Field(description="List of project details and achievements")
+
+class EducationItem(BaseModel):
+    title: str = Field(description="Degree or certification name")
+    place: str = Field(description="Institution name")
+    date: str = Field(description="Date range or graduation date")
+    description: List[str] = Field(default=[], description="Additional details about education")
+
+class ProfessionalSummaryResponse(BaseModel):
+    professional_summary: str = Field(description="Improved professional summary text")
+
+class WorkExperienceResponse(BaseModel):
+    work_experience: List[ExperienceItem] = Field(description="List of work experience items")
+
+class PersonalProjectsResponse(BaseModel):
+    personal_projects: List[ProjectItem] = Field(description="List of personal project items")
+
+class EducationResponse(BaseModel):
+    education: List[EducationItem] = Field(description="List of education items")
+
+class SkillsLanguagesResponse(BaseModel):
+    skills: List[str] = Field(description="List of technical and professional skills")
+    languages: List[str] = Field(description="List of languages and proficiency levels")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -183,6 +218,41 @@ async def generate_resume(
             use_o1_model=use_o1_model
         )
         
+        # Step 8: Save structured data for the viewer
+        try:
+            from src.core.assemble import read_generated_resume_text_to_dict, read_generated_personal_info_to_dict
+            
+            # Parse the structured data
+            resume_dict = read_generated_resume_text_to_dict(generated_resume_json)
+            personal_dict = read_generated_personal_info_to_dict(personal_details)
+            
+            # Combine and structure the data
+            structured_resume = {
+                "personal_info": {
+                    "name": personal_dict.get("name", ""),
+                    "email": personal_dict.get("email", ""),
+                    "phone_number": personal_dict.get("phone_number", ""),
+                    "address": personal_dict.get("address", ""),
+                    "linkedin": personal_dict.get("linkedin", ""),
+                    "github": personal_dict.get("github", "")
+                },
+                "professional_summary": resume_dict.get("professional_summary", ""),
+                "work_experience": resume_dict.get("work_experience", []),
+                "personal_projects": resume_dict.get("personal_projects", []),
+                "education": resume_dict.get("education", []),
+                "skills": resume_dict.get("skills", []),
+                "languages": resume_dict.get("languages", [])
+            }
+            
+            # Save structured data to a persistent file
+            structured_data_file = 'result/resume_structured.json'
+            with open(structured_data_file, 'w', encoding='utf-8') as f:
+                json.dump(structured_resume, f, indent=2, ensure_ascii=False)
+            logger.info("Saved structured resume data for viewer")
+            
+        except Exception as e:
+            logger.warning(f"Could not save structured data: {str(e)}")
+        
         logger.info("Successfully generated formatted resume")
         
         # Clean up temporary files
@@ -228,66 +298,35 @@ async def get_resume_content():
     This endpoint returns the resume data in a format suitable for viewing and editing.
     """
     try:
-        # First check if we have the structured JSON data
-        from src.utils.general_utils import read_temp_file
-        from src.data.consts import GENERATED_RESUME_TEXT, PERSONAL_DETAILS_TEMP_FILE_NAME
-        from src.core.assemble import read_generated_resume_text_to_dict, read_generated_personal_info_to_dict
-        import json
-        import re
+        # Check for persistent structured data file first
+        structured_data_file = 'result/resume_structured.json'
+        result_file = 'result/resume.docx'
         
-        # Try to get structured data first
-        try:
-            # Get the generated resume JSON
-            generated_resume_text = read_temp_file(GENERATED_RESUME_TEXT)
-            personal_info_text = read_temp_file(PERSONAL_DETAILS_TEMP_FILE_NAME)
+        if os.path.exists(structured_data_file):
+            # Load structured data from persistent file
+            with open(structured_data_file, 'r', encoding='utf-8') as f:
+                structured_resume = json.load(f)
             
-            # Parse the structured data
-            resume_dict = read_generated_resume_text_to_dict(generated_resume_text)
-            personal_dict = read_generated_personal_info_to_dict(personal_info_text)
-            
-            # Combine and structure the data
-            structured_resume = {
-                "personal_info": {
-                    "name": personal_dict.get("name", ""),
-                    "email": personal_dict.get("email", ""),
-                    "phone_number": personal_dict.get("phone_number", ""),
-                    "address": personal_dict.get("address", ""),
-                    "linkedin": personal_dict.get("linkedin", ""),
-                    "github": personal_dict.get("github", "")
-                },
-                "professional_summary": resume_dict.get("professional_summary", ""),
-                "work_experience": resume_dict.get("work_experience", []),
-                "personal_projects": resume_dict.get("personal_projects", []),
-                "education": resume_dict.get("education", []),
-                "skills": resume_dict.get("skills", []),
-                "languages": resume_dict.get("languages", [])
-            }
-            
-            result_file = 'result/resume.docx'
             return {
                 "structured_content": structured_resume,
                 "file_path": result_file,
                 "file_size": os.path.getsize(result_file) if os.path.exists(result_file) else 0,
                 "last_modified": os.path.getmtime(result_file) if os.path.exists(result_file) else 0
             }
-            
-        except Exception as structured_error:
-            logger.warning(f"Could not get structured data: {structured_error}")
-            
-            # Fallback to raw text if structured data is not available
-            result_file = 'result/resume.docx'
-            if not os.path.exists(result_file):
-                raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
-            
-            resume_text = extract_text_from_docx(result_file)
-            
-            return {
-                "raw_content": resume_text,
-                "file_path": result_file,
-                "file_size": os.path.getsize(result_file),
-                "last_modified": os.path.getmtime(result_file),
-                "note": "Structured data not available, returning raw text"
-            }
+        
+        # Fallback to raw text if structured data is not available
+        if not os.path.exists(result_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        resume_text = extract_text_from_docx(result_file)
+        
+        return {
+            "raw_content": resume_text,
+            "file_path": result_file,
+            "file_size": os.path.getsize(result_file),
+            "last_modified": os.path.getmtime(result_file),
+            "note": "Structured data not available, returning raw text"
+        }
         
     except Exception as e:
         logger.error(f"Error retrieving resume content: {str(e)}")
@@ -312,3 +351,147 @@ async def download_resume():
     except Exception as e:
         logger.error(f"Error downloading resume: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error downloading resume: {str(e)}")
+
+@app.post("/resume/edit-section")
+async def edit_resume_section(
+    section_key: str = Form(...),
+    edit_prompt: str = Form(...),
+    use_o1_model: bool = Form(False)
+):
+    """
+    Edit a specific section of the resume using AI.
+    """
+    try:
+        # Check if structured data exists
+        structured_data_file = 'result/resume_structured.json'
+        if not os.path.exists(structured_data_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Load current structured data
+        with open(structured_data_file, 'r', encoding='utf-8') as f:
+            resume_data = json.load(f)
+        
+        # Get the section to edit
+        section_data = None
+        if section_key == "professional_summary":
+            section_data = resume_data.get("professional_summary", "")
+        elif section_key == "work_experience":
+            section_data = resume_data.get("work_experience", [])
+        elif section_key == "personal_projects":
+            section_data = resume_data.get("personal_projects", [])
+        elif section_key == "education":
+            section_data = resume_data.get("education", [])
+        elif section_key == "skills_languages":
+            section_data = {
+                "skills": resume_data.get("skills", []),
+                "languages": resume_data.get("languages", [])
+            }
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown section: {section_key}")
+        
+        # Use AI to edit the section with structured output
+        from src.utils.langchain_utils import LangChainClient
+        from langchain.schema import HumanMessage
+        
+        model_name = "o1-mini" if use_o1_model else "gpt-4o-mini"
+        langchain_client = LangChainClient(model_name=model_name)
+        
+        # Determine the response model based on section type
+        response_model = None
+        if section_key == "professional_summary":
+            response_model = ProfessionalSummaryResponse
+        elif section_key == "work_experience":
+            response_model = WorkExperienceResponse
+        elif section_key == "personal_projects":
+            response_model = PersonalProjectsResponse
+        elif section_key == "education":
+            response_model = EducationResponse
+        elif section_key == "skills_languages":
+            response_model = SkillsLanguagesResponse
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown section: {section_key}")
+        
+        # Create structured LLM
+        structured_llm = langchain_client.llm.with_structured_output(response_model)
+        
+        # Create prompt for editing
+        system_prompt = f"""You are an expert resume writer. You need to improve the following resume section based on the user's request.
+
+Section: {section_key}
+Current content: {json.dumps(section_data, indent=2)}
+
+User's editing request: {edit_prompt}
+
+Instructions:
+1. Only modify the content according to the user's request
+2. Maintain the same structure and format
+3. Keep the professional tone and accuracy
+4. Ensure all content is truthful and relevant
+5. Return the improved section in the specified format
+
+Improve the section based on the user's request and return it in the proper structured format."""
+
+        # Get AI response with structured output
+        try:
+            response = structured_llm.invoke([HumanMessage(content=system_prompt)])
+            
+            # Update the resume data based on the structured response
+            if section_key == "professional_summary":
+                resume_data["professional_summary"] = response.professional_summary
+            elif section_key == "work_experience":
+                resume_data["work_experience"] = [item.dict() for item in response.work_experience]
+            elif section_key == "personal_projects":
+                resume_data["personal_projects"] = [item.dict() for item in response.personal_projects]
+            elif section_key == "education":
+                resume_data["education"] = [item.dict() for item in response.education]
+            elif section_key == "skills_languages":
+                resume_data["skills"] = response.skills
+                resume_data["languages"] = response.languages
+            
+            # Save updated structured data
+            with open(structured_data_file, 'w', encoding='utf-8') as f:
+                json.dump(resume_data, f, indent=2, ensure_ascii=False)
+            
+            # Optionally regenerate the Word document
+            try:
+                from src.core.assemble import get_resume_details, assemble_new_resume
+                
+                # Create a simplified personal info and resume text for regeneration
+                personal_info_json = json.dumps(resume_data["personal_info"])
+                resume_text_json = json.dumps({
+                    "professional_summary": resume_data["professional_summary"],
+                    "work_experience": resume_data["work_experience"], 
+                    "personal_projects": resume_data["personal_projects"],
+                    "education": resume_data["education"],
+                    "skills": resume_data["skills"],
+                    "languages": resume_data["languages"]
+                })
+                
+                # Regenerate the Word document
+                assemble_new_resume(
+                    generated_resume_text=resume_text_json,
+                    personal_info=personal_info_json,
+                    use_o1_model=use_o1_model
+                )
+                logger.info("Regenerated Word document with updated content")
+                
+            except Exception as e:
+                logger.warning(f"Could not regenerate Word document: {str(e)}")
+            
+            return {
+                "success": True,
+                "message": f"Successfully updated {section_key}",
+                "updated_section": resume_data.get(section_key) if section_key != "skills_languages" else {
+                    "skills": resume_data.get("skills", []),
+                    "languages": resume_data.get("languages", [])
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get structured response: {str(e)}")
+            logger.error(f"Response type: {type(response) if 'response' in locals() else 'No response'}")
+            raise HTTPException(status_code=500, detail=f"AI editing failed: {str(e)}")
+        
+    except Exception as e:
+        logger.error(f"Error editing resume section: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error editing resume section: {str(e)}")

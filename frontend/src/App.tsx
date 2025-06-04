@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import ResumeViewer from './components/ResumeViewer';
@@ -27,6 +27,27 @@ function App() {
   const [generatedResumeUrl, setGeneratedResumeUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showResumeViewer, setShowResumeViewer] = useState(false);
+  const [hasExistingResume, setHasExistingResume] = useState(false);
+  const [checkingExistingResume, setCheckingExistingResume] = useState(true);
+
+  // Check for existing resume on app startup
+  useEffect(() => {
+    const checkExistingResume = async () => {
+      try {
+        const response = await axios.get<{structured_content?: any; raw_content?: string}>('http://localhost:8000/resume/content');
+        if (response.data.structured_content || response.data.raw_content) {
+          setHasExistingResume(true);
+        }
+      } catch (err) {
+        // No existing resume or error - that's fine
+        setHasExistingResume(false);
+      } finally {
+        setCheckingExistingResume(false);
+      }
+    };
+
+    checkExistingResume();
+  }, []);
 
   const resumeDropzone = useDropzone({
     accept: {
@@ -86,6 +107,7 @@ function App() {
       // Create a URL for the downloaded file
       const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
       setGeneratedResumeUrl(url);
+      setHasExistingResume(true);
       
     } catch (err: any) {
       setError(err.response?.data?.detail || 'An error occurred while generating the resume');
@@ -110,6 +132,56 @@ function App() {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Resume Creator</h1>
           <p className="text-lg text-gray-600">Generate tailored resumes using AI technology</p>
         </div>
+
+        {/* Existing Resume Section */}
+        {checkingExistingResume ? (
+          <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-center">
+              <svg className="animate-spin h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-gray-600">Checking for existing resume...</span>
+            </div>
+          </div>
+        ) : hasExistingResume ? (
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 shadow-lg rounded-lg p-6 mb-8 border border-green-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">✅ Resume Available</h3>
+                <p className="text-gray-600">You have a resume ready to view and edit. You can view it now or generate a new one below.</p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowResumeViewer(true)}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition-colors font-medium"
+                >
+                  🔍 View & Edit Resume
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await axios.get('http://localhost:8000/resume/download', {
+                        responseType: 'blob',
+                      });
+                      const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = 'current_resume.docx';
+                      link.click();
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      setError('Failed to download resume');
+                    }
+                  }}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors font-medium"
+                >
+                  📥 Download
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8 space-y-8">
