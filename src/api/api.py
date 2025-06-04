@@ -29,6 +29,8 @@ from src.data.consts import (
     COMPANY_SUMMARY_TEMP_FILE_NAME,
     FULL_ACCOMPLISHMENTS_TEMP_FILE_NAME,
     JOB_INDUSTRY_TEMP_FILE_NAME,
+    GENERATED_RESUME_TEXT,
+    PERSONAL_DETAILS_TEMP_FILE_NAME,
 )
 from src.utils.general_utils import read_temp_file, save_to_temp_file
 from src.utils.docx_writer import extract_text_from_docx
@@ -222,25 +224,70 @@ async def health_check():
 @app.get("/resume/content")
 async def get_resume_content():
     """
-    Get the content of the most recently generated resume as JSON.
-    This endpoint will be used for viewing and future editing functionality.
+    Get the content of the most recently generated resume as structured JSON.
+    This endpoint returns the resume data in a format suitable for viewing and editing.
     """
     try:
-        result_file = 'result/resume.docx'
-        if not os.path.exists(result_file):
-            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        # First check if we have the structured JSON data
+        from src.utils.general_utils import read_temp_file
+        from src.data.consts import GENERATED_RESUME_TEXT, PERSONAL_DETAILS_TEMP_FILE_NAME
+        from src.core.assemble import read_generated_resume_text_to_dict, read_generated_personal_info_to_dict
+        import json
+        import re
         
-        # Extract text content from the docx file
-        resume_text = extract_text_from_docx(result_file)
-        
-        # For now, return the raw text. In the future, this could be enhanced
-        # to return structured JSON with sections, formatting, etc.
-        return {
-            "content": resume_text,
-            "file_path": result_file,
-            "file_size": os.path.getsize(result_file),
-            "last_modified": os.path.getmtime(result_file)
-        }
+        # Try to get structured data first
+        try:
+            # Get the generated resume JSON
+            generated_resume_text = read_temp_file(GENERATED_RESUME_TEXT)
+            personal_info_text = read_temp_file(PERSONAL_DETAILS_TEMP_FILE_NAME)
+            
+            # Parse the structured data
+            resume_dict = read_generated_resume_text_to_dict(generated_resume_text)
+            personal_dict = read_generated_personal_info_to_dict(personal_info_text)
+            
+            # Combine and structure the data
+            structured_resume = {
+                "personal_info": {
+                    "name": personal_dict.get("name", ""),
+                    "email": personal_dict.get("email", ""),
+                    "phone_number": personal_dict.get("phone_number", ""),
+                    "address": personal_dict.get("address", ""),
+                    "linkedin": personal_dict.get("linkedin", ""),
+                    "github": personal_dict.get("github", "")
+                },
+                "professional_summary": resume_dict.get("professional_summary", ""),
+                "work_experience": resume_dict.get("work_experience", []),
+                "personal_projects": resume_dict.get("personal_projects", []),
+                "education": resume_dict.get("education", []),
+                "skills": resume_dict.get("skills", []),
+                "languages": resume_dict.get("languages", [])
+            }
+            
+            result_file = 'result/resume.docx'
+            return {
+                "structured_content": structured_resume,
+                "file_path": result_file,
+                "file_size": os.path.getsize(result_file) if os.path.exists(result_file) else 0,
+                "last_modified": os.path.getmtime(result_file) if os.path.exists(result_file) else 0
+            }
+            
+        except Exception as structured_error:
+            logger.warning(f"Could not get structured data: {structured_error}")
+            
+            # Fallback to raw text if structured data is not available
+            result_file = 'result/resume.docx'
+            if not os.path.exists(result_file):
+                raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+            
+            resume_text = extract_text_from_docx(result_file)
+            
+            return {
+                "raw_content": resume_text,
+                "file_path": result_file,
+                "file_size": os.path.getsize(result_file),
+                "last_modified": os.path.getmtime(result_file),
+                "note": "Structured data not available, returning raw text"
+            }
         
     except Exception as e:
         logger.error(f"Error retrieving resume content: {str(e)}")
