@@ -1,151 +1,193 @@
-# Resume Creator API
+# Resume Creator - Full-Stack Application
 
-Resume Creator API is a Python-based tool designed to automate the creation of a tailored resume for specific job applications. It leverages OpenAI's GPT models to generate customized resume content by analyzing your existing resume, additional accomplishments, the job description, and company information.
+A modern full-stack application that generates tailored resumes using OpenAI's GPT models. This tool helps create customized resumes by analyzing job descriptions and company information to highlight the most relevant skills and experiences.
 
-## Table of Contents
+## 🏗️ Architecture
 
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Setup and Installation](#setup-and-installation)
-- [Running the API](#running-the-api)
-- [Using the API](#using-the-api)
-  - [Endpoint](#endpoint)
-  - [Request Parameters](#request-parameters)
-- [Cleaning Temporary Files](#cleaning-temporary-files)
-- [Notes](#notes)
+- **Frontend**: React TypeScript with Tailwind CSS
+- **Backend**: FastAPI with Python
+- **Containerization**: Docker & Docker Compose
+- **AI Integration**: OpenAI GPT models
 
-## Features
+---
 
-- **Accomplishment Extraction**: Extracts your professional accomplishments from your existing resume and an additional accomplishments file.
-- **Company Summary Generation**: Crawls the company's website to generate a comprehensive summary.
-- **Job Description Parsing**: Extracts and processes the job description from a provided URL.
-- **Industry Identification**: Determines the primary industry related to the job.
-- **Resume Generation**: Creates a customized resume in JSON format, focusing on relevant skills and experiences.
-- **Resume Assembly**: Converts the generated JSON resume into a well-formatted Word document.
-- **API Interface**: Provides a RESTful API to interact with the resume generation process.
+## 🚀 Quick Start
 
-## Prerequisites
+**The easiest way to run the application:**
 
-- **Python 3.7 or higher**
-- **OpenAI API access** (API key and organization ID)
-- **Required Python packages** (listed in `requirements.txt`):
-  - `fastapi`
-  - `uvicorn`
-  - `docx2txt`
-  - `beautifulsoup4`
-  - `requests`
-  - `tqdm`
-  - `python-dotenv`
-  - `python-docx`
-  - `tiktoken`
+1. **Clone and setup:**
+   ```bash
+   git clone <repository-url>
+   cd resume_creator
+   cp env.example .env  # Add your OpenAI credentials to .env
+   ```
 
-## Setup and Installation
+2. **Run the application:**
+   ```bash
+   ./run_app.sh
+   ```
 
-### 1. Clone the Repository
+3. **Access the application:**
+   - **Frontend UI**: http://localhost:3000 ← **Start here!**
+   - **Backend API**: http://localhost:8000
+   - **API Docs**: http://localhost:8000/docs
 
-```bash
-git clone https://github.com/yoadsimon/resume_creator.git
-cd resume_creator
+That's it! The script handles everything - stopping old containers, building, and starting both frontend and backend.
+
+---
+
+## 🗂️ Project Structure
+
+```
+resume_creator/
+├── frontend/                # React TypeScript frontend
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── App.tsx         # Main application component
+│   │   └── index.tsx       # Application entry point
+│   ├── public/             # Static assets
+│   ├── package.json        # Frontend dependencies
+│   ├── Dockerfile          # Production frontend container
+│   └── Dockerfile.dev      # Development frontend container
+├── src/                     # Backend source code (importable as a package)
+│   ├── core/               # Core resume creation logic (main pipeline steps)
+│   ├── api/                # FastAPI server
+│   ├── utils/              # Utility modules (OpenAI, LangChain, docx, etc.)
+│   └── data/               # Constants and config
+├── tests/                  # All tests (unit, integration, E2E)
+├── scripts/               # Helper scripts
+├── data/                  # Input, temp, and result files (runtime data)
+├── docker/               # Docker configuration files
+│   ├── docker-compose.yml     # Production setup
+│   ├── docker-compose.dev.yml # Development setup
+│   └── Dockerfile.backend     # Backend container
+├── run_app.sh            # 🚀 Main script to run the application
+├── requirements.txt      # Python dependencies
+├── .env.example         # Example environment variables
+└── README.md
 ```
 
-### 2. Create a Virtual Environment
+---
 
+## 🎯 Features
+
+### ✅ Current Features
+- **Modern React UI**: Clean, responsive interface with Tailwind CSS
+- **File Upload**: Drag & drop support for resume (.docx) and accomplishments (.txt) files
+- **AI-Powered Generation**: Uses OpenAI GPT models to create tailored resumes
+- **Company Analysis**: Analyzes job descriptions and company information
+- **Resume Viewer**: Professional document-style viewer with structured resume display
+- **AI-Powered Editing**: Click "Edit with AI" on any section to improve content with custom prompts
+- **Structured Responses**: Reliable Pydantic models ensure consistent AI editing results
+- **Persistent Data**: Resume data persists between app restarts - no need to regenerate
+- **Real-time Updates**: See changes immediately after AI editing
+- **Download**: Download generated resumes as .docx files
+- **Docker Support**: Full containerization for easy deployment
+
+### 🔮 Coming Soon
+- **Section Management**: Add, remove, and reorder resume sections
+- **Multiple Export Formats**: PDF, HTML, and other formats
+- **Template Selection**: Choose from different resume templates
+- **Version History**: Track and revert to previous versions
+- **Batch Processing**: Edit multiple resumes at once
+
+---
+
+## 🔧 Alternative Running Methods
+
+### Option 1: Development with Hot Reload
 ```bash
-python -m venv resume_creator_venv
+bash scripts/run_dev.sh
 ```
 
-### 3. Activate the Virtual Environment
+### Option 2: Manual Development Setup
 
-- On macOS and Linux:
-
-  ```bash
-  source resume_creator_venv/bin/activate
-  ```
-
-- On Windows:
-
-  ```bash
-  resume_creator_venv\Scripts\activate
-  ```
-
-### 4. Install Dependencies
-
+**Backend:**
 ```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
+cp env.example .env  # Add your OpenAI credentials
+uvicorn src.api.api:app --reload
 ```
 
-### 5. Configure Environment Variables
-
-Create a `.env` file in the root directory and add your OpenAI credentials:
-
-```dotenv
-OPEN_AI_ORGANIZATION_ID=your_organization_id
-OPEN_AI_PROJECT_ID=your_project_id
-OPEN_AI_TOKEN=your_api_key
+**Frontend (in another terminal):**
+```bash
+cd frontend
+npm install
+npm start
 ```
 
-Replace `your_organization_id`, `your_project_id`, and `your_api_key` with your actual OpenAI credentials.
+### Option 3: Docker Commands
+```bash
+# Production build and run
+cd docker && docker compose up --build
 
-## Running the API
+# Development with hot reload
+cd docker && docker compose -f docker-compose.dev.yml up --build
 
-To start the Resume Creator API server, run the following command:
+# Stop services
+cd docker && docker compose down
+```
+
+---
+
+## 📦 Environment Variables
+
+Copy `env.example` to `.env` and fill in your credentials:
 
 ```bash
-uvicorn api:app --reload
+# OpenAI Configuration
+OPEN_AI_TOKEN=your_openai_api_key
+OPEN_AI_ORGANIZATION_ID=your_org_id  # Optional
+OPEN_AI_PROJECT_ID=your_project_id  # Optional
 ```
 
-- **`api:app`** tells Uvicorn to look for the `app` object in the `api.py` file.
-- **`--reload`** enables auto-reload, making the server restart when you make changes to the code (useful during development).
+---
 
-The server will start and listen on `http://127.0.0.1:8000` by default.
+## 🔧 API Endpoints
 
-## Using the API
+- `POST /generate_resume` - Generate a tailored resume
+- `GET /resume/content` - Get resume content as structured JSON
+- `POST /resume/edit-section` - Edit specific resume sections using AI
+- `GET /resume/download` - Download the generated resume file
+- `GET /health` - Health check endpoint
+- `GET /docs` - Interactive API documentation
 
-### Endpoint
+---
 
-**POST** `/generate_resume`
-
-This endpoint accepts your resume file, accomplishments file, and other relevant information to generate a tailored resume.
-
-### Request Parameters
-
-The API expects a multipart/form-data POST request with the following parameters:
-
-| Parameter                | Type    | Description                                                        | Required |
-|--------------------------|---------|--------------------------------------------------------------------|----------|
-| `resume_file`            | File    | Your current resume in `.docx` format                              | Yes      |
-| `accomplishments_file`   | File    | Additional accomplishments in a text file                          | Yes      |
-| `job_description_link`   | String  | URL to the job description                                         | Yes      |
-| `company_base_link`      | String  | Base URL of the company's website                                  | Yes      |
-| `company_name`           | String  | Name of the company *(if not provided, it will be extracted)*      | No       |
-| `force_run_all`          | Boolean | If `true`, the script ignores cached data (default is `false`)     | No       |
-
-
-
-### Accessing Interactive API Documentation
-
-After starting the server, you can access the interactive API documentation provided by FastAPI at:
-
-```
-http://127.0.0.1:8000/docs
-```
-
-This interface allows you to interact with the API directly from your browser, providing a user-friendly way to test the endpoint.
-
-## Cleaning Temporary Files
-
-The API generates temporary files during processing, stored in the `temp` and `result` directories. To clean up these files after processing, you can run the provided script:
+## 🧪 Testing
 
 ```bash
-python clean_temp_files.py
+# Run all tests
+bash scripts/run_tests.sh
+# or
+python -m pytest tests/
+
+# Generate test data
+python tests/scripts/generate_test_files.py
 ```
 
-This script removes the `temp` directory and its contents.
+---
 
-## Notes
+## 🚀 Deployment
 
-- **OpenAI API Usage**: Ensure that your OpenAI API credentials are valid and that you have sufficient quota to make API calls.
-- **File Formats**: The `resume_file` should be in `.docx` format, and the `accomplishments_file` should be a plaintext file.
-- **Error Handling**: If the API returns an error, check the server logs for detailed error messages.
-- **Security Considerations**: Be cautious with the files you upload and ensure they are from trusted sources.
-- **Performance**: The resume generation process can take some time due to API calls to OpenAI. Please be patient after sending a request.
+The application is fully containerized and ready for deployment to any Docker-compatible platform:
+
+- **Docker Compose**: Use the provided docker-compose.yml
+- **Kubernetes**: Convert Docker Compose to K8s manifests
+- **Cloud Platforms**: Deploy to AWS ECS, Google Cloud Run, Azure Container Instances, etc.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+---
+
+**Questions?** Open an issue or see the code for more details.
