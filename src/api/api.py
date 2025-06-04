@@ -218,3 +218,50 @@ async def generate_resume(
 async def health_check():
     """Health check endpoint for Docker and monitoring systems."""
     return {"status": "healthy", "service": "resume-creator"}
+
+@app.get("/resume/content")
+async def get_resume_content():
+    """
+    Get the content of the most recently generated resume as JSON.
+    This endpoint will be used for viewing and future editing functionality.
+    """
+    try:
+        result_file = 'result/resume.docx'
+        if not os.path.exists(result_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        # Extract text content from the docx file
+        resume_text = extract_text_from_docx(result_file)
+        
+        # For now, return the raw text. In the future, this could be enhanced
+        # to return structured JSON with sections, formatting, etc.
+        return {
+            "content": resume_text,
+            "file_path": result_file,
+            "file_size": os.path.getsize(result_file),
+            "last_modified": os.path.getmtime(result_file)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving resume content: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving resume content: {str(e)}")
+
+@app.get("/resume/download")
+async def download_resume():
+    """
+    Download the most recently generated resume file.
+    """
+    try:
+        result_file = 'result/resume.docx'
+        if not os.path.exists(result_file):
+            raise HTTPException(status_code=404, detail="No resume found. Please generate a resume first.")
+        
+        return FileResponse(
+            path=result_file,
+            filename='tailored_resume.docx',
+            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error downloading resume: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error downloading resume: {str(e)}")

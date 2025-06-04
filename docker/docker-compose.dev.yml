@@ -1,0 +1,46 @@
+services:
+  frontend-dev:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    container_name: resume-creator-frontend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend-dev
+    networks:
+      - resume-network
+
+  backend-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: resume-creator-backend-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - OPEN_AI_ORGANIZATION_ID=${OPEN_AI_ORGANIZATION_ID}
+      - OPEN_AI_PROJECT_ID=${OPEN_AI_PROJECT_ID}
+      - OPEN_AI_TOKEN=${OPEN_AI_TOKEN}
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - DEBUG=1
+    volumes:
+      - ..:/app
+      - ../data/temp:/app/temp
+      - ../data/result:/app/result
+      - ../data/inputs:/app/data/inputs
+    command: uvicorn src.api.api:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - resume-network
+
+networks:
+  resume-network:
+    driver: bridge 

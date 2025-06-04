@@ -1,17 +1,27 @@
-version: '3.8'
-
 services:
-  resume-creator:
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: resume-creator-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - resume-network
+
+  backend:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.backend
       # Enable BuildKit for faster builds
       cache_from:
         - python:3.13-slim
       # Build arguments for optimization
       args:
         BUILDKIT_INLINE_CACHE: 1
-    container_name: resume-creator-app
+    container_name: resume-creator-backend
     ports:
       - "8000:8000"
     environment:
@@ -45,17 +55,17 @@ services:
     networks:
       - resume-network
 
-  # Optional: Add a database service for future enhancements
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: resume-creator-redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis_data:/data
-  #   restart: unless-stopped
-  #   networks:
-  #     - resume-network
+# Optional: Add a database service for future enhancements
+# redis:
+#   image: redis:7-alpine
+#   container_name: resume-creator-redis
+#   ports:
+#     - "6379:6379"
+#   volumes:
+#     - redis_data:/data
+#   restart: unless-stopped
+#   networks:
+#     - resume-network
 
 networks:
   resume-network:
@@ -67,7 +77,7 @@ networks:
 # Optional: Add development override
 # Create docker-compose.override.yml for development with:
 # services:
-#   resume-creator:
+#   backend:
 #     volumes:
 #       - .:/app
 #     environment:
